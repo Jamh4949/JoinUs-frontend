@@ -4,6 +4,7 @@ import { IoMdClose } from 'react-icons/io';
 import { useState } from 'react';
 import Logo from '../../assets/JoinUs.png';
 import type { FC } from 'react';
+import { Link } from "react-router-dom";
 
 type NavLink = {
     label: string;
@@ -49,9 +50,9 @@ const Navbar: FC = () => {
                 </ul>
 
                 <div className="navbar__btns">
-                    <a href="#" className="navbar__login-btn">
+                        <Link to="/login" className="navbar__login-btn">
                         Iniciar Sesión
-                    </a>
+                        </Link>
                     <a href="#" className="btn">
                         Registrarse
                     </a>
