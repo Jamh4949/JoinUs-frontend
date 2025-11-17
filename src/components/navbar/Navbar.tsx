@@ -1,17 +1,3 @@
-/**
- * Navbar Component
- *
- * Main navigation bar for the JoinUs application. Provides:
- * - Responsive navigation menu
- * - Mobile hamburger menu
- * - Logo and branding
- * - Authentication action buttons
- * - Full ARIA accessibility support
- *
- * @component
- * @module Navbar
- */
-
 import type { FC } from 'react';
 import { useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
@@ -110,15 +96,14 @@ const Navbar: FC = () => {
           ))}
         </ul>
 
-        {/* Authentication action buttons */}
-        <div className="navbar__btns" aria-label="Acciones de usuario">
-          <Link to="/login" className="navbar__login-btn">
-            Iniciar Sesión
-          </Link>
-          <Link to="/register" className="btn">
-            Registrarse
-          </Link>
-        </div>
+                <div className="navbar__btns">
+                        <Link to="/login" className="navbar__login-btn">
+                        Iniciar Sesión
+                        </Link>
+                    <a href="#" className="btn">
+                        Registrarse
+                    </a>
+                </div>
 
         {/* Mobile menu toggle button */}
         <button

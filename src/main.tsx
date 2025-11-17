@@ -9,10 +9,11 @@
  * @module main
  */
 
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.scss';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+
 
 /**
  * Gets the root DOM element where the application will be mounted
@@ -28,13 +29,8 @@ if (!rootElement) {
   throw new Error('Root element not found');
 }
 
-/**
- * Creates and renders the React application
- * - StrictMode: Activates additional checks and warnings in development
- * - App: Main component containing all application logic
- */
-createRoot(rootElement).render(
-  <StrictMode>
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <BrowserRouter>
     <App />
-  </StrictMode>
+  </BrowserRouter>
 );
