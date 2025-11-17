@@ -3,7 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, 
     GoogleAuthProvider,
     signInWithPopup,
-    FacebookAuthProvider,
+    GithubAuthProvider,
     signInWithEmailAndPassword,
     } from "firebase/auth";
 
@@ -29,17 +29,22 @@ const provider = new GoogleAuthProvider();
 export const loginWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, provider);
-    return result.user; // Aquí viene id, nombre, email, foto, etc.
+    return result.user; 
   } catch (error: any) {
-    console.error("Error logging in with Google:", error);
+    console.error("Error al loguear con google:", error);
     throw error;
   }
 };
 
-export const loginWithFacebook = async () => {
-    const provider = new FacebookAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    return result.user;
+const githubProvider = new GithubAuthProvider();
+
+export const loginWithGithub = () => {
+  return signInWithPopup(auth, githubProvider)
+    .then((result) => result.user)
+    .catch((error) => {
+      console.error("Error en GitHub login:", error);
+      throw error;
+    });
 };
 
 // EMAIL

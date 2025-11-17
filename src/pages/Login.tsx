@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 
-import { loginWithGoogle, loginWithFacebook, loginWithEmail } from "../config/firebase";
+import { loginWithGoogle, loginWithGithub, loginWithEmail } from "../config/firebase";
 
 
 const API_URL = import.meta.env.VITE_BACKEND_API_URL;
@@ -58,10 +58,10 @@ const Login = () => {
   };
 
 
-  const handleFacebook = async () => {
+  const handleGithubLogin = async () => {
   try {
-    const user = await loginWithFacebook();  
-    const token = await user.getIdToken();    
+    const user = await loginWithGithub();
+    const token = await user.getIdToken();
     const session = await saveSession(user);
 
     const res = await axios.post(`${API_URL}/users/userExist`, { token });
@@ -78,10 +78,9 @@ const Login = () => {
 
   } catch (err) {
     console.error(err);
-    alert("Error al iniciar sesión con Facebook");
+    alert("Error al iniciar sesión con GitHub");
   }
 };
-
   // -----------------------------------------------------------
   // LOGIN CON EMAIL / PASSWORD
   // -----------------------------------------------------------
@@ -105,7 +104,7 @@ const Login = () => {
       <h1>Iniciar Sesión</h1>
 
       <button onClick={handleGoogleLogin}>Iniciar con Google</button>
-      <button onClick={handleFacebook}>Iniciar con Facebook</button>
+      <button onClick={handleGithubLogin}>Iniciar con GitHub</button>
 
       <hr style={{ margin: "20px 0" }} />
 

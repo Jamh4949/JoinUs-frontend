@@ -1,7 +1,9 @@
 import { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+
 
 interface GoogleData {
   uid: string;
@@ -16,6 +18,8 @@ interface Props {
 }
 
 export default function Registration({ googleData }: Props) {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     email: googleData.email,
     firstName: googleData.name?.split(" ")[0] || "",
@@ -46,8 +50,8 @@ export default function Registration({ googleData }: Props) {
           age: Number(formData.age),
         }
       );
-
       alert("Registro completado correctamente");
+      navigate("/");
       console.log(res.data);
     } catch (err: any) {
       console.error(err);
