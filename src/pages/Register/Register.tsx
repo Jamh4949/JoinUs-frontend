@@ -1,3 +1,24 @@
+/**
+ * Register Page Component
+ *
+ * User registration page featuring:
+ * - Multi-field registration form
+ * - Real-time validation with visual feedback
+ * - Password strength requirements display
+ * - Accessibility-compliant form controls
+ * - AOS animations for visual appeal
+ *
+ * Validation includes:
+ * - Name fields: Letters and spaces only, minimum 2 characters
+ * - Age: Must be between 18 and 120
+ * - Email: Standard email format
+ * - Password: Complex requirements (8+ chars, uppercase, lowercase, number, special char)
+ * - Confirm password: Must match password field
+ *
+ * @component
+ * @module Register
+ */
+
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import type { ChangeEvent, FC, FormEvent } from 'react';
@@ -5,6 +26,16 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Register.scss';
 
+/**
+ * Type definition for registration form data
+ * @typedef {Object} RegisterFormData
+ * @property {string} firstName - User's first name
+ * @property {string} lastName - User's last name
+ * @property {string} age - User's age (as string for form handling)
+ * @property {string} email - User's email address
+ * @property {string} password - User's password
+ * @property {string} confirmPassword - Password confirmation
+ */
 interface RegisterFormData {
   firstName: string;
   lastName: string;
@@ -14,6 +45,16 @@ interface RegisterFormData {
   confirmPassword: string;
 }
 
+/**
+ * Type definition for form validation errors
+ * @typedef {Object} FormErrors
+ * @property {string} [firstName] - First name validation error
+ * @property {string} [lastName] - Last name validation error
+ * @property {string} [age] - Age validation error
+ * @property {string} [email] - Email validation error
+ * @property {string} [password] - Password validation error
+ * @property {string} [confirmPassword] - Password confirmation error
+ */
 interface FormErrors {
   firstName?: string;
   lastName?: string;
@@ -23,6 +64,22 @@ interface FormErrors {
   confirmPassword?: string;
 }
 
+/**
+ * Registration page component with comprehensive form validation
+ *
+ * State Management:
+ * - formData: Stores all form field values
+ * - errors: Validation error messages for each field
+ * - touched: Tracks which fields have been interacted with
+ *
+ * Features:
+ * - Real-time validation feedback
+ * - Password strength indicator
+ * - Accessible error messages
+ * - Responsive design
+ *
+ * @returns {JSX.Element} Rendered registration page
+ */
 const Register: FC = () => {
   const [formData, setFormData] = useState<RegisterFormData>({
     firstName: '',
@@ -36,17 +93,30 @@ const Register: FC = () => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
 
+  /**
+   * Initialize AOS (Animate On Scroll) library
+   * Runs once on component mount
+   */
   useEffect((): void => {
     AOS.init({ duration: 1000 });
   }, []);
 
+  /**
+   * Validates a single form field based on field-specific rules
+   *
+   * @param {string} name - Field name to validate
+   * @param {string} value - Field value to validate
+   * @returns {string | undefined} Error message if validation fails, undefined otherwise
+   */
   const validateField = (name: string, value: string): string | undefined => {
     switch (name) {
       case 'firstName':
       case 'lastName':
+        // Names must contain only letters and spaces
         if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value)) {
           return 'Solo se permiten letras y espacios';
         }
+        // Names must be at least 2 characters
         if (value.trim().length < 2) {
           return 'Debe tener al menos 2 caracteres';
         }
@@ -54,15 +124,18 @@ const Register: FC = () => {
 
       case 'age':
         const age = parseInt(value);
+        // Age must be a valid number
         if (isNaN(age)) {
           return 'Debe ser un número válido';
         }
+        // Age must be between 18 and 120
         if (age < 18 || age > 120) {
           return 'La edad debe estar entre 18 y 120 años';
         }
         break;
 
       case 'email':
+        // Email must match standard email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(value)) {
           return 'Correo electrónico inválido';
@@ -70,24 +143,30 @@ const Register: FC = () => {
         break;
 
       case 'password':
+        // Password must be at least 8 characters
         if (value.length < 8) {
           return 'Debe tener al menos 8 caracteres';
         }
+        // Password must contain at least one uppercase letter
         if (!/[A-Z]/.test(value)) {
           return 'Debe contener al menos una mayúscula';
         }
+        // Password must contain at least one lowercase letter
         if (!/[a-z]/.test(value)) {
           return 'Debe contener al menos una minúscula';
         }
+        // Password must contain at least one number
         if (!/[0-9]/.test(value)) {
           return 'Debe contener al menos un número';
         }
+        // Password must contain at least one special character
         if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
           return 'Debe contener al menos un carácter especial';
         }
         break;
 
       case 'confirmPassword':
+        // Confirm password must match password field
         if (value !== formData.password) {
           return 'Las contraseñas no coinciden';
         }
@@ -96,6 +175,12 @@ const Register: FC = () => {
     return undefined;
   };
 
+  /**
+   * Handles input field changes
+   * Updates form data and validates if field was already touched
+   *
+   * @param {ChangeEvent<HTMLInputElement>} e - Input change event
+   */
   const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -103,7 +188,7 @@ const Register: FC = () => {
       [name]: value,
     }));
 
-    // Validar el campo si ya fue tocado
+    // Validate field if it was already touched
     if (touched[name]) {
       const error = validateField(name, value);
       setErrors((prev) => ({
@@ -113,6 +198,12 @@ const Register: FC = () => {
     }
   };
 
+  /**
+   * Handles input field blur events
+   * Marks field as touched and validates its value
+   *
+   * @param {ChangeEvent<HTMLInputElement>} e - Input blur event
+   */
   const handleBlur = (e: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     setTouched((prev) => ({
@@ -127,10 +218,16 @@ const Register: FC = () => {
     }));
   };
 
+  /**
+   * Handles form submission
+   * Validates all fields and prevents submission if errors exist
+   *
+   * @param {FormEvent<HTMLFormElement>} e - Form submission event
+   */
   const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
 
-    // Validar todos los campos
+    // Validate all fields
     const newErrors: FormErrors = {};
     Object.keys(formData).forEach((key) => {
       const error = validateField(key, formData[key as keyof RegisterFormData]);
@@ -139,32 +236,36 @@ const Register: FC = () => {
       }
     });
 
-    // Marcar todos los campos como tocados
+    // Mark all fields as touched
     const allTouched: { [key: string]: boolean } = {};
     Object.keys(formData).forEach((key) => {
       allTouched[key] = true;
     });
     setTouched(allTouched);
 
-    // Si hay errores, no enviar el formulario
+    // Don't submit if there are errors
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
     console.log('Register data:', formData);
-    // Aquí irá la lógica de registro con el backend
+    // TODO: Implement registration logic with backend
   };
 
   return (
     <section className="register">
       <div className="register__container wrapper">
         <div className="register__card" data-aos="zoom-in">
+          {/* Page heading */}
           <h1>Crear Cuenta</h1>
           <p className="register__subtitle">
             Únete a JoinUs y comienza a conectar
           </p>
+
+          {/* Registration form */}
           <form onSubmit={handleSubmit} className="register__form" noValidate>
+            {/* First name field */}
             <div className="register__field">
               <label htmlFor="firstName">Nombres</label>
               <input
@@ -197,6 +298,7 @@ const Register: FC = () => {
               )}
             </div>
 
+            {/* Last name field */}
             <div className="register__field">
               <label htmlFor="lastName">Apellidos</label>
               <input
@@ -229,6 +331,7 @@ const Register: FC = () => {
               )}
             </div>
 
+            {/* Age field */}
             <div className="register__field">
               <label htmlFor="age">Edad</label>
               <input
@@ -255,6 +358,7 @@ const Register: FC = () => {
               )}
             </div>
 
+            {/* Email field */}
             <div className="register__field">
               <label htmlFor="email">Correo Electrónico</label>
               <input
@@ -279,6 +383,7 @@ const Register: FC = () => {
               )}
             </div>
 
+            {/* Password field with requirements indicator */}
             <div className="register__field">
               <label htmlFor="password">Contraseña</label>
               <input
@@ -309,6 +414,7 @@ const Register: FC = () => {
                   {errors.password}
                 </span>
               )}
+              {/* Password strength requirements with live validation feedback */}
               <div
                 className="register__requirements"
                 id="password-requirements"
@@ -347,6 +453,7 @@ const Register: FC = () => {
               </div>
             </div>
 
+            {/* Confirm password field */}
             <div className="register__field">
               <label htmlFor="confirmPassword">Confirmar Contraseña</label>
               <input
@@ -385,11 +492,13 @@ const Register: FC = () => {
               )}
             </div>
 
+            {/* Submit button */}
             <button type="submit" className="btn register__submit">
               Registrarse
             </button>
           </form>
 
+          {/* Link to login page */}
           <p className="register__login">
             ¿Ya tienes una cuenta? <Link to="/login">Inicia sesión aquí</Link>
           </p>
