@@ -1,9 +1,9 @@
-import './Register.scss';
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import type { FC, FormEvent, ChangeEvent } from 'react';
+import type { ChangeEvent, FC, FormEvent } from 'react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import './Register.scss';
 
 interface RegisterFormData {
   firstName: string;
@@ -164,7 +164,7 @@ const Register: FC = () => {
           <p className="register__subtitle">
             Únete a JoinUs y comienza a conectar
           </p>
-          <form onSubmit={handleSubmit} className="register__form">
+          <form onSubmit={handleSubmit} className="register__form" noValidate>
             <div className="register__field">
               <label htmlFor="firstName">Nombres</label>
               <input
@@ -177,9 +177,23 @@ const Register: FC = () => {
                 required
                 placeholder="Juan"
                 className={errors.firstName && touched.firstName ? 'error' : ''}
+                aria-invalid={
+                  errors.firstName && touched.firstName ? 'true' : 'false'
+                }
+                aria-describedby={
+                  errors.firstName && touched.firstName
+                    ? 'firstName-error'
+                    : undefined
+                }
               />
               {errors.firstName && touched.firstName && (
-                <span className="register__error">{errors.firstName}</span>
+                <span
+                  className="register__error"
+                  id="firstName-error"
+                  role="alert"
+                >
+                  {errors.firstName}
+                </span>
               )}
             </div>
 
@@ -195,9 +209,23 @@ const Register: FC = () => {
                 required
                 placeholder="Pérez"
                 className={errors.lastName && touched.lastName ? 'error' : ''}
+                aria-invalid={
+                  errors.lastName && touched.lastName ? 'true' : 'false'
+                }
+                aria-describedby={
+                  errors.lastName && touched.lastName
+                    ? 'lastName-error'
+                    : undefined
+                }
               />
               {errors.lastName && touched.lastName && (
-                <span className="register__error">{errors.lastName}</span>
+                <span
+                  className="register__error"
+                  id="lastName-error"
+                  role="alert"
+                >
+                  {errors.lastName}
+                </span>
               )}
             </div>
 
@@ -215,9 +243,15 @@ const Register: FC = () => {
                 min="18"
                 max="120"
                 className={errors.age && touched.age ? 'error' : ''}
+                aria-invalid={errors.age && touched.age ? 'true' : 'false'}
+                aria-describedby={
+                  errors.age && touched.age ? 'age-error' : undefined
+                }
               />
               {errors.age && touched.age && (
-                <span className="register__error">{errors.age}</span>
+                <span className="register__error" id="age-error" role="alert">
+                  {errors.age}
+                </span>
               )}
             </div>
 
@@ -233,9 +267,15 @@ const Register: FC = () => {
                 required
                 placeholder="tu@email.com"
                 className={errors.email && touched.email ? 'error' : ''}
+                aria-invalid={errors.email && touched.email ? 'true' : 'false'}
+                aria-describedby={
+                  errors.email && touched.email ? 'email-error' : undefined
+                }
               />
               {errors.email && touched.email && (
-                <span className="register__error">{errors.email}</span>
+                <span className="register__error" id="email-error" role="alert">
+                  {errors.email}
+                </span>
               )}
             </div>
 
@@ -251,26 +291,56 @@ const Register: FC = () => {
                 required
                 placeholder="••••••••"
                 className={errors.password && touched.password ? 'error' : ''}
+                aria-invalid={
+                  errors.password && touched.password ? 'true' : 'false'
+                }
+                aria-describedby={
+                  errors.password && touched.password
+                    ? 'password-error password-requirements'
+                    : 'password-requirements'
+                }
               />
               {errors.password && touched.password && (
-                <span className="register__error">{errors.password}</span>
+                <span
+                  className="register__error"
+                  id="password-error"
+                  role="alert"
+                >
+                  {errors.password}
+                </span>
               )}
-              <div className="register__requirements">
+              <div
+                className="register__requirements"
+                id="password-requirements"
+                aria-live="polite"
+              >
                 <p>La contraseña debe contener:</p>
                 <ul>
                   <li className={formData.password.length >= 8 ? 'valid' : ''}>
                     Mínimo 8 caracteres
                   </li>
-                  <li className={/[A-Z]/.test(formData.password) ? 'valid' : ''}>
+                  <li
+                    className={/[A-Z]/.test(formData.password) ? 'valid' : ''}
+                  >
                     Una letra mayúscula
                   </li>
-                  <li className={/[a-z]/.test(formData.password) ? 'valid' : ''}>
+                  <li
+                    className={/[a-z]/.test(formData.password) ? 'valid' : ''}
+                  >
                     Una letra minúscula
                   </li>
-                  <li className={/[0-9]/.test(formData.password) ? 'valid' : ''}>
+                  <li
+                    className={/[0-9]/.test(formData.password) ? 'valid' : ''}
+                  >
                     Un número
                   </li>
-                  <li className={/[!@#$%^&*(),.?":{}|<>]/.test(formData.password) ? 'valid' : ''}>
+                  <li
+                    className={
+                      /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
+                        ? 'valid'
+                        : ''
+                    }
+                  >
                     Un carácter especial
                   </li>
                 </ul>
@@ -288,10 +358,30 @@ const Register: FC = () => {
                 onBlur={handleBlur}
                 required
                 placeholder="••••••••"
-                className={errors.confirmPassword && touched.confirmPassword ? 'error' : ''}
+                className={
+                  errors.confirmPassword && touched.confirmPassword
+                    ? 'error'
+                    : ''
+                }
+                aria-invalid={
+                  errors.confirmPassword && touched.confirmPassword
+                    ? 'true'
+                    : 'false'
+                }
+                aria-describedby={
+                  errors.confirmPassword && touched.confirmPassword
+                    ? 'confirmPassword-error'
+                    : undefined
+                }
               />
               {errors.confirmPassword && touched.confirmPassword && (
-                <span className="register__error">{errors.confirmPassword}</span>
+                <span
+                  className="register__error"
+                  id="confirmPassword-error"
+                  role="alert"
+                >
+                  {errors.confirmPassword}
+                </span>
               )}
             </div>
 
@@ -301,8 +391,7 @@ const Register: FC = () => {
           </form>
 
           <p className="register__login">
-            ¿Ya tienes una cuenta?{' '}
-            <Link to="/login">Inicia sesión aquí</Link>
+            ¿Ya tienes una cuenta? <Link to="/login">Inicia sesión aquí</Link>
           </p>
         </div>
       </div>
