@@ -1,0 +1,76 @@
+@use '../../styles/mixins.scss' as mixins;
+
+.sitemap {
+  min-height: 100vh;
+  padding-block: 8rem 5rem;
+
+  &__container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+
+    @include mixins.respond(phone) {
+      font-size: 2rem;
+    }
+  }
+
+  &__intro {
+    text-align: center;
+    color: var(--gray);
+    margin-bottom: 3rem;
+    font-size: 1.1rem;
+  }
+
+  &__content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 3rem;
+
+    @include mixins.respond(phone) {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+  }
+
+  &__section {
+    h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--cultured);
+      border-bottom: 2px solid;
+      border-image: linear-gradient(to right, #3fe8ab, #78cdcd) 1;
+      padding-bottom: 0.5rem;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+
+      li {
+        margin-bottom: 1rem;
+
+        a {
+          color: var(--gray);
+          text-decoration: none;
+          transition: all 0.3s ease;
+          display: inline-block;
+          padding: 0.3rem 0;
+
+          &:hover {
+            color: var(--cultured);
+            transform: translateX(5px);
+          }
+        }
+      }
+    }
+  }
+}

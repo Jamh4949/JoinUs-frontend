@@ -1,41 +1,77 @@
-import './Footer.scss';
-import Logo from '../../assets/JoinUs.png';
+/**
+ * Footer Component
+ *
+ * Site-wide footer containing:
+ * - Branding and copyright information
+ * - Navigation links organized by category
+ * - Authentication links
+ * - Documentation access
+ * - AOS animations for visual appeal
+ *
+ * @component
+ * @module Footer
+ */
+
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import { useEffect } from 'react';
 import type { FC } from 'react';
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import Logo from '../../assets/JoinUs.png';
+import './Footer.scss';
 
+/**
+ * Footer component with navigation and site information
+ *
+ * Features:
+ * - Organized navigation sections
+ * - AOS fade-up animation on scroll
+ * - Responsive grid layout
+ * - Accessibility-compliant navigation
+ *
+ * @returns {JSX.Element} Rendered footer
+ */
 const Footer: FC = () => {
+  /**
+   * Initialize AOS (Animate On Scroll) library
+   * Runs once on component mount
+   */
   useEffect((): void => {
     AOS.init({ duration: 1000 });
   }, []);
 
   return (
-    <footer className="footer">
+    <footer className="footer" role="contentinfo">
       <div className="footer__container wrapper" data-aos="fade-up">
+        {/* Branding column with logo and copyright */}
         <div className="footer__col">
-          <img src={Logo} alt="JoinUs Logo" />
+          <img src={Logo} alt="JoinUs" />
           <p className="footer__copyright">JoinUs © 2024.</p>
-          <p className="footer__copyright">All rights reserved.</p>
+          <p className="footer__copyright">Todos los derechos reservados.</p>
         </div>
 
-        <div className="footer__col">
+        {/* Site navigation column */}
+        <nav className="footer__col" aria-label="Navegación del sitio">
           <h3>Accede a:</h3>
-          <a href="#">Inicio</a>
-          <a href="#">Sobre Nosotros</a>
-          <a href="#">Mapa del Sitio</a>
-        </div>
+          <Link to="/">Inicio</Link>
+          <Link to="/about">Sobre Nosotros</Link>
+          <Link to="/sitemap">Mapa del Sitio</Link>
+        </nav>
 
-        <div className="footer__col">
+        {/* User account options column */}
+        <nav className="footer__col" aria-label="Opciones de cuenta">
           <h3>Opciones del Usuario:</h3>
-          <a href="#">Login</a>
-          <a href="#">Registro</a>
-          <a href="#">Olvidé mi Contraseña</a>
-        </div>
+          <Link to="/login">Login</Link>
+          <Link to="/register">Registro</Link>
+          <Link to="/forgot-password">Olvidé mi Contraseña</Link>
+        </nav>
 
+        {/* Documentation and help column */}
         <div className="footer__col">
           <h3>Guía:</h3>
-          <a href="#">Manual de Usuario</a>
+          <a href="#" aria-label="Manual de usuario de JoinUs">
+            Manual de Usuario
+          </a>
         </div>
       </div>
     </footer>

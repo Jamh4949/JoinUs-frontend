@@ -1,0 +1,255 @@
+@use '../../styles/mixins.scss' as mixins;
+
+.login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: 8rem 3rem;
+
+  &__container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  &__card {
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--black-olive);
+    border-radius: 1rem;
+    padding: 3rem;
+    max-width: 450px;
+    width: 100%;
+    backdrop-filter: blur(10px);
+
+    @include mixins.respond(phone) {
+      padding: 2rem 1.5rem;
+    }
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+
+    @include mixins.respond(phone) {
+      font-size: 2rem;
+    }
+  }
+
+  &__subtitle {
+    text-align: center;
+    color: var(--gray);
+    margin-bottom: 1.5rem;
+  }
+
+  &__social {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &__social-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--black-olive);
+    border-radius: 0.5rem;
+    background-color: var(--black);
+    color: var(--cultured);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover:not(:disabled) {
+      background-color: rgba(63, 232, 171, 0.1);
+      border-color: #3fe8ab;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    &--google {
+      &:hover:not(:disabled) {
+        background-color: rgba(66, 133, 244, 0.1);
+        border-color: #4285f4;
+      }
+    }
+
+    &--github {
+      &:hover:not(:disabled) {
+        background-color: rgba(240, 240, 240, 0.1);
+        border-color: #f0f0f0;
+      }
+    }
+
+    &--facebook {
+      &:hover:not(:disabled) {
+        background-color: rgba(24, 119, 242, 0.1);
+        border-color: #1877f2;
+      }
+    }
+
+    svg {
+      flex-shrink: 0;
+    }
+
+    @include mixins.respond(phone) {
+      font-size: 0.9rem;
+      padding: 0.8rem 0.8rem;
+    }
+  }
+
+  &__divider {
+    position: relative;
+    text-align: center;
+    margin-bottom: 1.5rem;
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 45%;
+      height: 1px;
+      background-color: var(--black-olive);
+    }
+
+    &::before {
+      left: 0;
+    }
+
+    &::after {
+      right: 0;
+    }
+
+    span {
+      padding: 0 1rem;
+      color: var(--gray);
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    label {
+      color: var(--cultured);
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    input {
+      padding: 0.9rem 1rem;
+      border: 1px solid var(--black-olive);
+      border-radius: 0.5rem;
+      background-color: var(--black);
+      color: var(--cultured);
+      font-size: 1rem;
+      transition: all 0.3s ease;
+
+      &:focus {
+        outline: none;
+        border-color: #3fe8ab;
+        box-shadow: 0 0 0 3px rgba(63, 232, 171, 0.1);
+      }
+
+      &::placeholder {
+        color: #a0a0a0;
+      }
+
+      &.error {
+        border-color: #ff6b6b;
+
+        &:focus {
+          border-color: #ff6b6b;
+          box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+        }
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &__error {
+    color: #ff6b6b;
+    font-size: 0.85rem;
+    margin-top: -0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+
+    &::before {
+      content: '⚠';
+      font-size: 1rem;
+    }
+  }
+
+  &__options {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.9rem;
+  }
+
+  &__forgot {
+    color: var(--gray);
+    text-decoration: none;
+    transition: color 0.3s ease;
+
+    &:hover {
+      color: var(--cultured);
+    }
+  }
+
+  &__submit {
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &__register {
+    text-align: center;
+    margin-top: 2rem;
+    color: var(--gray);
+
+    a {
+      color: #3fe8ab;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+
+      &:hover {
+        color: #78cdcd;
+      }
+    }
+  }
+}

@@ -1,40 +1,123 @@
-import './Startmeet.scss';
+/**
+ * Startmeet Component
+ *
+ * Meeting management section that allows users to:
+ * - Join existing meetings using a code
+ * - Start new private meetings
+ * - Quick access to meeting functionality
+ *
+ * @component
+ * @module Startmeet
+ */
+
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import { useEffect } from 'react';
 import type { FC, FormEvent } from 'react';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import './Startmeet.scss';
 
+/**
+ * Start or join meeting section component
+ *
+ * Features:
+ * - Meeting code input with validation
+ * - Quick join functionality
+ * - New meeting creation
+ * - AOS animations for visual appeal
+ * - Accessibility-compliant form
+ *
+ * @returns {JSX.Element} Rendered start meeting section
+ */
 const Startmeet: FC = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  /**
+   * Initialize AOS (Animate On Scroll) library
+   * Runs once on component mount
+   */
   useEffect((): void => {
     AOS.init({ duration: 1000 });
   }, []);
 
+  /**
+   * Handles form submission for joining a meeting
+   * Prevents default form behavior and processes the meeting code
+   *
+   * @param {FormEvent<HTMLFormElement>} e - Form submission event
+   */
   const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
+    // TODO: Implement meeting join logic with backend integration
+  };
+
+  /**
+   * Handles starting a new meeting
+   * Redirects to login if not authenticated, otherwise to conference page
+   */
+  const handleStartMeeting = (): void => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    } else {
+      navigate('/conference');
+    }
   };
 
   return (
-    <section className="startmeet">
+    <section id="reuniones" className="startmeet" aria-labelledby="startmeet-heading">
       <div className="startmeet__container wrapper">
-        <h2 data-aos="fade-up">
+        {/* Section heading */}
+        <h2 id="startmeet-heading" data-aos="fade-up">
           ¡Comienza o únete a tu reunión con un solo click!
         </h2>
+
+        {/* Description text */}
         <p data-aos="fade-up">
           ¿Listo para conectar? Usa el código de invitación para unirte
           rápidamente a cualquier sala o crea una nueva reunión privada en este
           momento para empezar a hablar con quien quieras.
         </p>
-        <form action="#" data-aos="fade-up" onSubmit={handleSubmit}>
-          <input type="text" placeholder="Ingresa el código..." />
-          <a href="#" className="btn">
+
+        {/* Meeting code form */}
+        <form
+          action="#"
+          data-aos="fade-up"
+          onSubmit={handleSubmit}
+          role="search"
+        >
+          {/* Screen reader only label */}
+          <label htmlFor="meeting-code" className="sr-only">
+            Código de reunión
+          </label>
+
+          {/* Meeting code input field */}
+          <input
+            type="text"
+            id="meeting-code"
+            name="meetingCode"
+            placeholder="Ingresa el código..."
+            aria-label="Ingresar código de reunión"
+            required
+          />
+
+          {/* Submit button to join meeting */}
+          <button type="submit" className="btn">
             Unirse a la reunión
-          </a>
+          </button>
         </form>
+
+        {/* Alternative option - Start new meeting */}
         <div className="startmeet__alt" data-aos="fade-up">
           <p>O también puedes</p>
-          <a href="#" className="btn">
+          <button
+            type="button"
+            className="btn"
+            onClick={handleStartMeeting}
+          >
             Iniciar una nueva reunión
-          </a>
+          </button>
         </div>
       </div>
     </section>
