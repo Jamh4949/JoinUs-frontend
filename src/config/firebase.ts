@@ -5,10 +5,7 @@ import { getAuth,
     signInWithPopup,
     GithubAuthProvider,
     signInWithEmailAndPassword,
-    fetchSignInMethodsForEmail,
-    linkWithCredential,
-    GoogleAuthProvider as GoogleAuthProviderClass,
-    GithubAuthProvider as GithubAuthProviderClass,
+    type Auth
     } from "firebase/auth";
 
 const firebaseConfig = {
@@ -23,7 +20,7 @@ const firebaseConfig = {
 
 // Inicializar Firebase solo si hay configuración válida
 let app;
-let auth;
+let auth: Auth | undefined;
 try {
   if (firebaseConfig.apiKey && firebaseConfig.projectId) {
     app = initializeApp(firebaseConfig);
