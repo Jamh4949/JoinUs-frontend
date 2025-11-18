@@ -92,6 +92,13 @@ export const loginWithEmail = async (email: string, password: string) => {
   if (!auth) {
     throw new Error("Firebase no está configurado. Por favor, configura las variables de entorno de Firebase.");
   }
-  const result = await signInWithEmailAndPassword(auth, email, password);
-  return result.user;
+  try {
+    console.log('[Firebase] Attempting login with email:', email);
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    console.log('[Firebase] Login successful:', result.user.uid);
+    return result.user;
+  } catch (error: any) {
+    console.error('[Firebase] Login error:', error.code, error.message);
+    throw error;
+  }
 };
