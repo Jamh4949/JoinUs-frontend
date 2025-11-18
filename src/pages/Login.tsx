@@ -122,6 +122,7 @@ const Login: FC = () => {
           name: result.displayName || '',
           photo: result.photoURL || '',
           token: res.token, // Use backend JWT token
+          hasPassword: res.user.hasPassword, // Include hasPassword flag
         };
         login(userData);
         alert('¡Inicio de sesión exitoso! Redirigiendo...');
@@ -171,6 +172,7 @@ const Login: FC = () => {
           name: user.displayName || '',
           photo: user.photoURL || '',
           token: res.token, // Use backend JWT token
+          hasPassword: res.user.hasPassword, // Include hasPassword flag
         };
         login(userData);
         alert('¡Inicio de sesión exitoso! Redirigiendo...');
@@ -239,6 +241,7 @@ const Login: FC = () => {
           name: firebaseUser.displayName || `${res.user.firstName} ${res.user.lastName}`,
           photo: firebaseUser.photoURL || '',
           token: res.token, // Use backend JWT token
+          hasPassword: res.user.hasPassword, // Include hasPassword flag
         };
         login(userData);
         alert('¡Inicio de sesión exitoso! Redirigiendo...');
