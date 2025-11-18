@@ -180,6 +180,7 @@ const RegisterOAuth: FC = () => {
           name: `${formData.firstName} ${formData.lastName}`,
           photo: googleData.photo || '',
           token: data.token,
+          hasPassword: data.user?.hasPassword || false, // Include hasPassword flag
         };
         login(userData);
         alert('¡Perfil completado exitosamente!');
