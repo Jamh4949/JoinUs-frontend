@@ -1,11 +1,16 @@
 import type { FC } from 'react';
 import { Route, Routes } from 'react-router-dom';
-import Footer from './components/footer/Footer';
-import Navbar from './components/navbar/Navbar';
-import RegisterProvider from './pages/Register';
+import Home from './pages/Home';
+import RegisterOAuth from './pages/RegisterOAuth';
+import RegisterManual from './pages/Register/Register';
 import Login from './pages/Login';
-import Startmeet from './components/startmeet/Startmeet';
-import Hero from './components/hero/Hero';
+import About from './pages/About/About';
+import SiteMap from './pages/SiteMap/SiteMap';
+import Meeting from './pages/Meeting/Meeting';
+import Profile from './pages/Profile/Profile';
+import Conference from './pages/Conference/Conference';
+import ForgotPassword from './pages/ForgotPassword/ForgotPassword';
+import ResetPassword from './pages/ResetPassword/ResetPassword';
 
 /**
  * Root component that orchestrates the entire application
@@ -20,29 +25,40 @@ import Hero from './components/hero/Hero';
  */
 const App: FC = () => {
   return (
-    <>
-      <Navbar />
-
-      <Routes>
+    <Routes>
         {/* HOME */}
-        <Route
-          path="/"
-          element={
-            <>
-              <Hero />
-              <Startmeet />
-              <Footer />
-            </>
-          }
-        />
+        <Route path="/" element={<Home />} />
 
         {/* LOGIN */}
         <Route path="/login" element={<Login />} />
 
-        {/*REGISTROS*/}
-        <Route path="/registroExterno" element={<RegisterProvider />} />
+        {/* REGISTRO MANUAL (Email y contraseña) */}
+        <Route path="/register" element={<RegisterManual />} />
+
+        {/* REGISTRO OAUTH (Completar perfil después de Google/GitHub) */}
+        <Route path="/registroExterno" element={<RegisterOAuth />} />
+
+        {/* SOBRE NOSOTROS */}
+        <Route path="/about" element={<About />} />
+
+        {/* MAPA DEL SITIO */}
+        <Route path="/sitemap" element={<SiteMap />} />
+
+        {/* REUNIÓN */}
+        <Route path="/meeting" element={<Meeting />} />
+
+        {/* PERFIL DE USUARIO */}
+        <Route path="/profile" element={<Profile />} />
+
+        {/* CONFERENCIA */}
+        <Route path="/conference" element={<Conference />} />
+
+        {/* RECUPERAR CONTRASEÑA */}
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        {/* RESTABLECER CONTRASEÑA */}
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
       </Routes>
-    </>
   );
 };
 

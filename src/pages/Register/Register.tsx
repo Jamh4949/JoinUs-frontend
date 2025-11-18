@@ -23,8 +23,12 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 import type { ChangeEvent, FC, FormEvent } from 'react';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import Footer from '../../components/footer/Footer';
+import Navbar from '../../components/navbar/Navbar';
 import './Register.scss';
+
+const API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
 /**
  * Type definition for registration form data
@@ -81,6 +85,8 @@ interface FormErrors {
  * @returns {JSX.Element} Rendered registration page
  */
 const Register: FC = () => {
+  const navigate = useNavigate();
+  
   const [formData, setFormData] = useState<RegisterFormData>({
     firstName: '',
     lastName: '',
@@ -92,6 +98,7 @@ const Register: FC = () => {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
+  const [isLoading, setIsLoading] = useState(false);
 
   /**
    * Initialize AOS (Animate On Scroll) library
@@ -224,7 +231,7 @@ const Register: FC = () => {
    *
    * @param {FormEvent<HTMLFormElement>} e - Form submission event
    */
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
     // Validate all fields
@@ -249,12 +256,47 @@ const Register: FC = () => {
       return;
     }
 
-    console.log('Register data:', formData);
-    // TODO: Implement registration logic with backend
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/users/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          age: parseInt(formData.age),
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al crear la cuenta');
+      }
+
+      const data = await response.json();
+
+      if (data) {
+        alert('¡Cuenta creada con éxito! Redirigiendo...');
+        setTimeout(() => {
+          navigate('/login');
+        }, 1000);
+      }
+    } catch (error: any) {
+      console.error('Error al registrar:', error);
+      alert(error.message || 'Error al crear la cuenta. Por favor intenta de nuevo.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <section className="register">
+    <>
+      <Navbar />
+      <section className="register">
       <div className="register__container wrapper">
         <div className="register__card" data-aos="zoom-in">
           {/* Page heading */}
@@ -286,6 +328,7 @@ const Register: FC = () => {
                     ? 'firstName-error'
                     : undefined
                 }
+                disabled={isLoading}
               />
               {errors.firstName && touched.firstName && (
                 <span
@@ -319,6 +362,7 @@ const Register: FC = () => {
                     ? 'lastName-error'
                     : undefined
                 }
+                disabled={isLoading}
               />
               {errors.lastName && touched.lastName && (
                 <span
@@ -350,6 +394,7 @@ const Register: FC = () => {
                 aria-describedby={
                   errors.age && touched.age ? 'age-error' : undefined
                 }
+                disabled={isLoading}
               />
               {errors.age && touched.age && (
                 <span className="register__error" id="age-error" role="alert">
@@ -375,6 +420,7 @@ const Register: FC = () => {
                 aria-describedby={
                   errors.email && touched.email ? 'email-error' : undefined
                 }
+                disabled={isLoading}
               />
               {errors.email && touched.email && (
                 <span className="register__error" id="email-error" role="alert">
@@ -480,6 +526,7 @@ const Register: FC = () => {
                     ? 'confirmPassword-error'
                     : undefined
                 }
+                disabled={isLoading}
               />
               {errors.confirmPassword && touched.confirmPassword && (
                 <span
@@ -493,18 +540,20 @@ const Register: FC = () => {
             </div>
 
             {/* Submit button */}
-            <button type="submit" className="btn register__submit">
-              Registrarse
+            <button type="submit" className="btn register__submit" disabled={isLoading}>
+              {isLoading ? 'Creando cuenta...' : 'Registrarse'}
             </button>
           </form>
 
           {/* Link to login page */}
           <p className="register__login">
-            ¿Ya tienes una cuenta? <Link to="/login">Inicia sesión aquí</Link>
+            ¿Ya tienes una cuenta? <Link to="/login">Inicia sesión</Link>
           </p>
         </div>
       </div>
     </section>
+    <Footer />
+    </>
   );
 };
 

@@ -1,0 +1,214 @@
+@use '../../styles/mixins' as mixins;
+
+.profile {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+  padding: 8rem 2rem 4rem;
+
+  @include mixins.respond(tab-port) {
+    padding: 7rem 1.5rem 3rem;
+  }
+
+  &__container {
+    max-width: 500px;
+    margin: 0 auto;
+    background: rgba(30, 30, 45, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(63, 232, 171, 0.2);
+    border-radius: 1.5rem;
+    padding: 3rem 2.5rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+    @include mixins.respond(tab-port) {
+      padding: 2.5rem 2rem;
+    }
+
+    @include mixins.respond(phone) {
+      padding: 2rem 1.5rem;
+    }
+  }
+
+  &__title {
+    color: var(--medium-turquoise);
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 2rem;
+
+    @include mixins.respond(phone) {
+      font-size: 1.75rem;
+    }
+  }
+
+  &__avatar {
+    width: 5rem;
+    height: 5rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3fe8ab, #78cdcd);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--black);
+    font-weight: 700;
+    font-size: 2.5rem;
+    margin: 0 auto 2.5rem;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    label {
+      color: var(--cultured);
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    input {
+      padding: 0.85rem 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0.5rem;
+      color: var(--cultured);
+      font-size: 1rem;
+      transition: all 0.3s ease;
+
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      &:focus {
+        outline: none;
+        border-color: var(--medium-turquoise);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 0 3px rgba(63, 232, 171, 0.1);
+      }
+
+      &[aria-invalid='true'] {
+        border-color: #ff6b6b;
+      }
+    }
+  }
+
+  &__error {
+    color: #ff6b6b;
+    font-size: 0.85rem;
+    margin-top: -0.25rem;
+  }
+
+  &__submit {
+    margin-top: 1rem;
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &__delete-btn {
+    background: transparent;
+    border: none;
+    color: #ff6b6b;
+    font-size: 0.9rem;
+    text-align: center;
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: all 0.3s ease;
+    text-decoration: underline;
+
+    &:hover {
+      color: #ff8787;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &__modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 1rem;
+  }
+
+  &__modal {
+    background: rgba(30, 30, 45, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(63, 232, 171, 0.2);
+    border-radius: 1rem;
+    padding: 2.5rem;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+
+    h2 {
+      color: var(--cultured);
+      font-size: 1.3rem;
+      margin-bottom: 2rem;
+      line-height: 1.5;
+    }
+  }
+
+  &__modal-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  &__modal-btn {
+    padding: 0.85rem 2rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 100px;
+
+    &--no {
+      background: transparent;
+      border: 1px solid var(--spanish-gray);
+      color: var(--cultured);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+    }
+
+    &--yes {
+      background: linear-gradient(135deg, #ff6b6b, #ff8787);
+      color: white;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+    }
+  }
+}

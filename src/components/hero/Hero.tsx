@@ -85,7 +85,7 @@ const Hero: FC = () => {
                 className="hero__login-btn"
                 aria-label="Iniciar sesión en JoinUs"
               >
-                Inicia Sesión
+                Iniciar Sesión
               </Link>
             </div>
           </div>

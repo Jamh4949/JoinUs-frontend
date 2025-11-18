@@ -18,6 +18,8 @@ import 'aos/dist/aos.css';
 import type { FC } from 'react';
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import Navbar from '../../components/navbar/Navbar';
+import Footer from '../../components/footer/Footer';
 import './About.scss';
 
 /**
@@ -97,15 +99,17 @@ const About: FC = () => {
   ];
 
   return (
-    <section className="about" aria-labelledby="about-title">
+    <>
+      <Navbar />
+      <section className="about" aria-labelledby="about-title">
       <div className="about__container wrapper">
         {/* Page header with main introduction */}
         <header className="about__header" data-aos="fade-up">
           <h1 id="about-title">Sobre Nosotros</h1>
           <p className="about__lead">
             JoinUs es una plataforma de videoconferencias pensada para facilitar
-            la colaboración remota con herramientas integradas que priorizan la
-            simplicidad, la seguridad y la accesibilidad.
+            la colaboración remota con herramientas integradas que priorizan
+            la simplicidad, la seguridad y la accesibilidad.
           </p>
         </header>
 
@@ -201,6 +205,8 @@ const About: FC = () => {
         </div>
       </div>
     </section>
+    <Footer />
+    </>
   );
 };
 

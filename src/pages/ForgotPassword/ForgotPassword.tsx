@@ -22,6 +22,8 @@ import 'aos/dist/aos.css';
 import type { ChangeEvent, FC, FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import Navbar from '../../components/navbar/Navbar';
+import Footer from '../../components/footer/Footer';
 import './ForgotPassword.scss';
 
 /**
@@ -101,11 +103,11 @@ const ForgotPassword: FC = () => {
 
   /**
    * Handles form submission
-   * Validates email and shows success message if valid
+   * Validates email and sends password recovery request to backend
    *
    * @param {FormEvent<HTMLFormElement>} e - Form submission event
    */
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
     // Validate the field
@@ -117,11 +119,28 @@ const ForgotPassword: FC = () => {
       return;
     }
 
-    // If no errors, simulate email sending
-    console.log('Recovery email sent to:', email);
-    setSubmitted(true);
+    try {
+      const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+      
+      const response = await fetch(`${API_URL}/users/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
 
-    // TODO: Implement backend integration for password recovery
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al enviar el correo');
+      }
+
+      console.log('Recovery email sent to:', email);
+      setSubmitted(true);
+    } catch (error: any) {
+      console.error('Error sending reset email:', error);
+      setError(error.message || 'Error al enviar el correo de recuperación');
+    }
   };
 
   // Success state - shown after form submission
@@ -168,7 +187,9 @@ const ForgotPassword: FC = () => {
 
   // Form state - initial view
   return (
-    <section className="forgot-password">
+    <>
+      <Navbar />
+      <section className="forgot-password">
       <div className="forgot-password__container wrapper">
         <div className="forgot-password__card" data-aos="zoom-in">
           {/* Page heading */}
@@ -225,6 +246,8 @@ const ForgotPassword: FC = () => {
         </div>
       </div>
     </section>
+    <Footer />
+    </>
   );
 };
 

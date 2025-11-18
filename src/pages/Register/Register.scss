@@ -18,7 +18,7 @@
     border: 1px solid var(--black-olive);
     border-radius: 1rem;
     padding: 3rem;
-    max-width: 450px;
+    max-width: 550px;
     width: 100%;
     backdrop-filter: blur(10px);
 
@@ -90,6 +90,11 @@
           border-color: #ff6b6b;
           box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
         }
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
       }
     }
   }
@@ -163,6 +168,11 @@
     padding: 1rem;
     font-size: 1rem;
     font-weight: 600;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   }
 
   &__login {

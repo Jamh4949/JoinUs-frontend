@@ -1,10 +1,11 @@
 import type { FC } from 'react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import { IoMenu } from 'react-icons/io5';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../../assets/JoinUs.png';
 import './Navbar.scss';
+import { useAuth } from '../../contexts/AuthContext';
 
 /**
  * Type definition for navigation link objects
@@ -45,6 +46,10 @@ const NAV_LINKS: readonly NavLink[] = [
  */
 const Navbar: FC = () => {
   const [showNav, setShowNav] = useState<boolean>(false);
+  const [showDropdown, setShowDropdown] = useState<boolean>(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   /**
    * Toggles the mobile navigation menu visibility
@@ -62,6 +67,54 @@ const Navbar: FC = () => {
   const handleCloseNav = (): void => {
     setShowNav(false);
   };
+
+  /**
+   * Handles user logout
+   * Clears session and redirects to home
+   * @function
+   */
+  const handleLogout = (): void => {
+    setShowDropdown(false);
+    handleCloseNav();
+    alert('Sesión cerrada con éxito. Redirigiendo...');
+    
+    // Small delay before logout
+    setTimeout(() => {
+      logout();
+      navigate('/');
+    }, 1000);
+  };
+
+  /**
+   * Toggles the user dropdown menu
+   * @function
+   */
+  const toggleDropdown = (): void => {
+    setShowDropdown(!showDropdown);
+  };
+
+  /**
+   * Gets the first letter of the user's name for the avatar
+   * @function
+   * @returns {string} First letter of the user's name
+   */
+  const getUserInitial = (): string => {
+    if (user?.firstName) return user.firstName.charAt(0).toUpperCase();
+    if (user?.name) return user.name.charAt(0).toUpperCase();
+    return 'U';
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <header className="navbar" role="banner">
@@ -94,16 +147,76 @@ const Navbar: FC = () => {
               </Link>
             </li>
           ))}
+          {/* Mobile auth buttons */}
+          {!isAuthenticated ? (
+            <>
+              <li className="navbar__mobile-btns">
+                <Link to="/login" onClick={handleCloseNav} className="navbar__mobile-login">
+                  Iniciar Sesión
+                </Link>
+              </li>
+              <li className="navbar__mobile-btns">
+                <Link to="/register" onClick={handleCloseNav} className="btn">
+                  Registrarse
+                </Link>
+              </li>
+            </>
+          ) : (
+            <li className="navbar__mobile-btns">
+              <button onClick={handleLogout} className="btn">
+                Cerrar Sesión
+              </button>
+            </li>
+          )}
         </ul>
 
-                <div className="navbar__btns">
-                        <Link to="/login" className="navbar__login-btn">
-                        Iniciar Sesión
-                        </Link>
-                    <a href="#" className="btn">
-                        Registrarse
-                    </a>
+        {/* Desktop auth section */}
+        <div className="navbar__btns">
+          {!isAuthenticated ? (
+            <>
+              <Link to="/login" className="navbar__login-btn">
+                Iniciar Sesión
+              </Link>
+              <Link to="/register" className="btn">
+                Registrarse
+              </Link>
+            </>
+          ) : (
+            <div className="navbar__user-dropdown" ref={dropdownRef}>
+              <button 
+                className="navbar__user-btn" 
+                onClick={toggleDropdown}
+                aria-expanded={showDropdown}
+                aria-haspopup="true"
+              >
+                <div className="navbar__user-avatar">
+                  {getUserInitial()}
                 </div>
+                <span className="navbar__user-name">
+                  {user?.firstName || user?.name || 'Usuario'} {user?.lastName || ''}
+                </span>
+              </button>
+
+              {showDropdown && (
+                <div className="navbar__dropdown-menu">
+                  <Link 
+                    to="/profile" 
+                    className="navbar__dropdown-item"
+                    onClick={() => setShowDropdown(false)}
+                  >
+                    Editar perfil
+                  </Link>
+                  <button 
+                    className="navbar__dropdown-item navbar__dropdown-item--logout"
+                    onClick={handleLogout}
+                  >
+                    Cerrar sesión
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Mobile menu toggle button */}
         <button

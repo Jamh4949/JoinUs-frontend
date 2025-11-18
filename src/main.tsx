@@ -13,6 +13,7 @@ import App from './App.tsx';
 import './index.scss';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext.tsx';
 
 
 /**
@@ -31,6 +32,8 @@ if (!rootElement) {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <BrowserRouter>
-    <App />
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   </BrowserRouter>
 );

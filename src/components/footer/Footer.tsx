@@ -47,7 +47,7 @@ const Footer: FC = () => {
         <div className="footer__col">
           <img src={Logo} alt="JoinUs" />
           <p className="footer__copyright">JoinUs © 2024.</p>
-          <p className="footer__copyright">All rights reserved.</p>
+          <p className="footer__copyright">Todos los derechos reservados.</p>
         </div>
 
         {/* Site navigation column */}

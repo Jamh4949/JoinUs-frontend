@@ -14,6 +14,8 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 import type { FC, FormEvent } from 'react';
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import './Startmeet.scss';
 
 /**
@@ -29,6 +31,9 @@ import './Startmeet.scss';
  * @returns {JSX.Element} Rendered start meeting section
  */
 const Startmeet: FC = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
   /**
    * Initialize AOS (Animate On Scroll) library
    * Runs once on component mount
@@ -48,8 +53,20 @@ const Startmeet: FC = () => {
     // TODO: Implement meeting join logic with backend integration
   };
 
+  /**
+   * Handles starting a new meeting
+   * Redirects to login if not authenticated, otherwise to conference page
+   */
+  const handleStartMeeting = (): void => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    } else {
+      navigate('/conference');
+    }
+  };
+
   return (
-    <section className="startmeet" aria-labelledby="startmeet-heading">
+    <section id="reuniones" className="startmeet" aria-labelledby="startmeet-heading">
       <div className="startmeet__container wrapper">
         {/* Section heading */}
         <h2 id="startmeet-heading" data-aos="fade-up">
@@ -97,7 +114,7 @@ const Startmeet: FC = () => {
           <button
             type="button"
             className="btn"
-            onClick={() => console.log('Nueva reunión')}
+            onClick={handleStartMeeting}
           >
             Iniciar una nueva reunión
           </button>

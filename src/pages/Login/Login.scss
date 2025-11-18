@@ -69,20 +69,32 @@
     cursor: pointer;
     transition: all 0.3s ease;
 
-    &:hover {
+    &:hover:not(:disabled) {
       background-color: rgba(63, 232, 171, 0.1);
       border-color: #3fe8ab;
     }
 
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     &--google {
-      &:hover {
+      &:hover:not(:disabled) {
         background-color: rgba(66, 133, 244, 0.1);
         border-color: #4285f4;
       }
     }
 
+    &--github {
+      &:hover:not(:disabled) {
+        background-color: rgba(240, 240, 240, 0.1);
+        border-color: #f0f0f0;
+      }
+    }
+
     &--facebook {
-      &:hover {
+      &:hover:not(:disabled) {
         background-color: rgba(24, 119, 242, 0.1);
         border-color: #1877f2;
       }
@@ -172,6 +184,11 @@
           box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
         }
       }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
     }
   }
 
@@ -212,6 +229,11 @@
     padding: 1rem;
     font-size: 1rem;
     font-weight: 600;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   }
 
   &__register {

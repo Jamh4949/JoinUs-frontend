@@ -20,6 +20,8 @@ import 'aos/dist/aos.css';
 import type { FC } from 'react';
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import Navbar from '../../components/navbar/Navbar';
+import Footer from '../../components/footer/Footer';
 import './SiteMap.scss';
 
 /**
@@ -43,7 +45,9 @@ const SiteMap: FC = () => {
   }, []);
 
   return (
-    <section className="sitemap" aria-labelledby="sitemap-title">
+    <>
+      <Navbar />
+      <section className="sitemap" aria-labelledby="sitemap-title">
       <div className="sitemap__container wrapper">
         {/* Page heading */}
         <h1 id="sitemap-title" data-aos="fade-up">
@@ -81,10 +85,10 @@ const SiteMap: FC = () => {
             <h2 id="sitemap-nav-meetings">Reuniones</h2>
             <ul>
               <li>
-                <Link to="/new-meeting">Iniciar Nueva Reunión</Link>
+                <Link to="/#reuniones">Iniciar Nueva Reunión</Link>
               </li>
               <li>
-                <Link to="/join-meeting">Unirse a Reunión</Link>
+                <Link to="/#reuniones">Unirse a Reunión</Link>
               </li>
             </ul>
           </nav>
@@ -122,6 +126,8 @@ const SiteMap: FC = () => {
         </div>
       </div>
     </section>
+    <Footer />
+    </>
   );
 };
 
