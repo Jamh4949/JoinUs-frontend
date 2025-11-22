@@ -26,39 +26,39 @@ import ResetPassword from './pages/ResetPassword/ResetPassword';
 const App: FC = () => {
   return (
     <Routes>
-        {/* HOME */}
-        <Route path="/" element={<Home />} />
+      {/* HOME */}
+      <Route path="/" element={<Home />} />
 
-        {/* LOGIN */}
-        <Route path="/login" element={<Login />} />
+      {/* LOGIN */}
+      <Route path="/login" element={<Login />} />
 
-        {/* REGISTRO MANUAL (Email y contraseña) */}
-        <Route path="/register" element={<RegisterManual />} />
+      {/* REGISTRO MANUAL (Email y contraseña) */}
+      <Route path="/register" element={<RegisterManual />} />
 
-        {/* REGISTRO OAUTH (Completar perfil después de Google/GitHub) */}
-        <Route path="/registroExterno" element={<RegisterOAuth />} />
+      {/* REGISTRO OAUTH (Completar perfil después de Google/GitHub) */}
+      <Route path="/registroExterno" element={<RegisterOAuth />} />
 
-        {/* SOBRE NOSOTROS */}
-        <Route path="/about" element={<About />} />
+      {/* SOBRE NOSOTROS */}
+      <Route path="/about" element={<About />} />
 
-        {/* MAPA DEL SITIO */}
-        <Route path="/sitemap" element={<SiteMap />} />
+      {/* MAPA DEL SITIO */}
+      <Route path="/sitemap" element={<SiteMap />} />
 
-        {/* REUNIÓN */}
-        <Route path="/meeting" element={<Meeting />} />
+      {/* REUNIÓN */}
+      <Route path="/meeting" element={<Meeting />} />
 
-        {/* PERFIL DE USUARIO */}
-        <Route path="/profile" element={<Profile />} />
+      {/* PERFIL DE USUARIO */}
+      <Route path="/profile" element={<Profile />} />
 
-        {/* CONFERENCIA */}
-        <Route path="/conference" element={<Conference />} />
+      {/* CONFERENCIA */}
+      <Route path="/conference/:meetingId" element={<Conference />} />
 
-        {/* RECUPERAR CONTRASEÑA */}
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+      {/* RECUPERAR CONTRASEÑA */}
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* RESTABLECER CONTRASEÑA */}
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
-      </Routes>
+      {/* RESTABLECER CONTRASEÑA */}
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
+    </Routes>
   );
 };
 

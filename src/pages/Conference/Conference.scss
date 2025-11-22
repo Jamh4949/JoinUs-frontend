@@ -133,7 +133,7 @@
 
     &--active {
       background: #ff6b6b;
-      
+
       &:hover {
         background: #ff8787;
       }
@@ -141,7 +141,7 @@
 
     &--end {
       background: linear-gradient(135deg, #ff6b6b, #ff4757);
-      
+
       &:hover {
         background: linear-gradient(135deg, #ff8787, #ff6b7a);
       }
@@ -149,7 +149,7 @@
   }
 
   &__chat {
-    width: 350px;
+    width: 450px;
     background: rgba(20, 20, 35, 0.95);
     backdrop-filter: blur(10px);
     border-left: 1px solid rgba(63, 232, 171, 0.2);
@@ -224,10 +224,46 @@
   }
 
   &__message {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 0.5rem;
-    padding: 0.85rem;
+    max-width: 75%;
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
     animation: slideIn 0.3s ease;
+    position: relative;
+    align-self: flex-start;
+    background: rgba(60, 60, 80, 0.6);
+    margin-bottom: 0.5rem;
+
+    // Tail pointer for others' messages (left side)
+    &::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: -8px;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 0 0 12px 12px;
+      border-color: transparent transparent rgba(60, 60, 80, 0.6) transparent;
+    }
+
+    // Own messages styling
+    &--own {
+      align-self: flex-end;
+      background: linear-gradient(135deg, rgba(63, 232, 171, 0.25), rgba(120, 205, 205, 0.25));
+      border: 1px solid rgba(63, 232, 171, 0.3);
+
+      // Tail pointer for own messages (right side)
+      &::before {
+        left: auto;
+        right: -8px;
+        border-width: 0 12px 12px 0;
+        border-color: transparent rgba(63, 232, 171, 0.25) transparent transparent;
+      }
+
+      .conference__message-user {
+        color: var(--medium-turquoise);
+      }
+    }
   }
 
   @keyframes slideIn {
@@ -235,6 +271,7 @@
       opacity: 0;
       transform: translateY(10px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -244,19 +281,21 @@
   &__message-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
+    align-items: baseline;
+    margin-bottom: 0.4rem;
+    gap: 0.75rem;
   }
 
   &__message-user {
-    color: var(--medium-turquoise);
+    color: rgba(255, 255, 255, 0.7);
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 
   &__message-time {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.7rem;
+    white-space: nowrap;
   }
 
   &__message-text {

@@ -1,30 +1,30 @@
 @use '../../styles/mixins' as mixins;
 
-.startmeet{
+.startmeet {
     padding-block: 5rem;
     text-align: center;
 
-    h2{
+    h2 {
         font-size: 2.5rem;
         line-height: 1.2;
 
-        @include mixins.respond(phone){
+        @include mixins.respond(phone) {
             font-size: 2rem;
         }
     }
 
-    p{
+    p {
         margin-block: 1rem 2rem;
         width: 70%;
         margin-inline: auto;
         color: var(--cultured);
 
-        @include mixins.respond(phone){
+        @include mixins.respond(phone) {
             width: 100%;
         }
     }
 
-    form{
+    form {
         display: flex;
         padding: 0.5rem;
         border-radius: 0.5rem;
@@ -34,12 +34,12 @@
         gap: 8rem;
         border: 2px solid var(--cultured);
 
-        @include mixins.respond(phone){
+        @include mixins.respond(phone) {
             gap: 1rem;
         }
     }
 
-    input{
+    input {
         background: transparent;
         border: none;
         padding-left: 1rem;
@@ -57,16 +57,41 @@
         }
     }
 
-    &__alt{
+    &__alt {
         margin-top: 2rem;
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 1rem;
 
-        p{
+        p {
             margin: 0;
             width: auto;
         }
+    }
+
+    &__error {
+        background: rgba(231, 76, 60, 0.1);
+        border: 1px solid rgba(231, 76, 60, 0.3);
+        border-radius: 0.75rem;
+        padding: 1rem 1.5rem;
+        color: #e74c3c;
+        margin-top: 1rem;
+        font-weight: 500;
+        animation: fadeIn 0.3s ease-out;
+        max-width: 500px;
+        margin-inline: auto;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
