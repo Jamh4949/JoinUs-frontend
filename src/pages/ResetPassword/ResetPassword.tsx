@@ -89,7 +89,7 @@ const ResetPassword: FC = () => {
 
     try {
       const API_URL = import.meta.env.VITE_BACKEND_API_URL;
-      
+
       const response = await fetch(`${API_URL}/users/reset-password`, {
         method: 'POST',
         headers: {
@@ -97,7 +97,7 @@ const ResetPassword: FC = () => {
         },
         body: JSON.stringify({
           token,
-          newPassword: formData.password,
+          password: formData.password,
         }),
       });
 
@@ -107,7 +107,7 @@ const ResetPassword: FC = () => {
       }
 
       setSuccess(true);
-      
+
       // Redirect to login after 2 seconds
       setTimeout(() => {
         navigate('/login');
@@ -128,7 +128,7 @@ const ResetPassword: FC = () => {
           {!success ? (
             <>
               <h1 className="reset-password__title">Recuperar Contraseña</h1>
-              
+
               <form className="reset-password__form" onSubmit={handleSubmit}>
                 <div className="reset-password__field">
                   <label htmlFor="password">Nueva Contraseña</label>
@@ -168,8 +168,8 @@ const ResetPassword: FC = () => {
                   )}
                 </div>
 
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="btn reset-password__submit"
                   disabled={isLoading}
                 >
