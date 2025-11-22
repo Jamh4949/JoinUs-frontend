@@ -12,8 +12,8 @@
 
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import type { FC, FormEvent } from 'react';
-import { useEffect } from 'react';
+import type { FC, FormEvent, ChangeEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import './Startmeet.scss';
@@ -33,6 +33,9 @@ import './Startmeet.scss';
 const Startmeet: FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const [meetingCode, setMeetingCode] = useState('');
+  const [isJoining, setIsJoining] = useState(false);
+  const [error, setError] = useState('');
 
   /**
    * Initialize AOS (Animate On Scroll) library
@@ -43,25 +46,77 @@ const Startmeet: FC = () => {
   }, []);
 
   /**
+   * Handles meeting code input change
+   * Only allows digits and limits to 6 characters
+   */
+  const handleMeetingCodeChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+    setMeetingCode(value);
+    setError('');
+  };
+
+  /**
    * Handles form submission for joining a meeting
-   * Prevents default form behavior and processes the meeting code
+   * Validates meeting code and redirects to conference page
    *
    * @param {FormEvent<HTMLFormElement>} e - Form submission event
    */
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    // TODO: Implement meeting join logic with backend integration
+
+    // Check authentication
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    // Validate meeting code format (6 digits)
+    if (!/^\d{6}$/.test(meetingCode)) {
+      setError('El código debe tener 6 dígitos');
+      return;
+    }
+
+    setIsJoining(true);
+    setError('');
+
+    try {
+      const CHAT_SERVER_URL = import.meta.env.VITE_CHAT_SERVER_URL || 'http://localhost:3001';
+
+      // Check if meeting exists
+      const response = await fetch(`${CHAT_SERVER_URL}/api/meetings/${meetingCode}`);
+
+      if (!response.ok) {
+        throw new Error('Meeting not found');
+      }
+
+      const data = await response.json();
+
+      // Check if meeting is full
+      if (data.participantCount >= 10) {
+        setError('La reunión está llena (máximo 10 participantes)');
+        setIsJoining(false);
+        return;
+      }
+
+      // Redirect to conference page
+      navigate(`/conference/${meetingCode}`);
+    } catch (err) {
+      console.error('Error joining meeting:', err);
+      setError('Reunión no encontrada. Verifica el código e intenta de nuevo.');
+    } finally {
+      setIsJoining(false);
+    }
   };
 
   /**
    * Handles starting a new meeting
-   * Redirects to login if not authenticated, otherwise to conference page
+   * Redirects to login if not authenticated, otherwise to meeting page
    */
   const handleStartMeeting = (): void => {
     if (!isAuthenticated) {
       navigate('/login');
     } else {
-      navigate('/conference');
+      navigate('/meeting');
     }
   };
 
@@ -82,7 +137,6 @@ const Startmeet: FC = () => {
 
         {/* Meeting code form */}
         <form
-          action="#"
           data-aos="fade-up"
           onSubmit={handleSubmit}
           role="search"
@@ -97,16 +151,37 @@ const Startmeet: FC = () => {
             type="text"
             id="meeting-code"
             name="meetingCode"
-            placeholder="Ingresa el código..."
+            value={meetingCode}
+            onChange={handleMeetingCodeChange}
+            placeholder="Ingresa el código de 6 dígitos..."
             aria-label="Ingresar código de reunión"
+            aria-invalid={!!error}
+            aria-describedby={error ? 'meeting-code-error' : undefined}
+            maxLength={6}
             required
           />
 
           {/* Submit button to join meeting */}
-          <button type="submit" className="btn">
-            Unirse a la reunión
+          <button
+            type="submit"
+            className="btn"
+            disabled={isJoining || meetingCode.length !== 6}
+          >
+            {isJoining ? 'Uniéndose...' : 'Unirse a la reunión'}
           </button>
         </form>
+
+        {/* Error message */}
+        {error && (
+          <div
+            className="startmeet__error"
+            id="meeting-code-error"
+            role="alert"
+            data-aos="fade-up"
+          >
+            {error}
+          </div>
+        )}
 
         {/* Alternative option - Start new meeting */}
         <div className="startmeet__alt" data-aos="fade-up">
