@@ -11,6 +11,7 @@ import Profile from './pages/Profile/Profile';
 import Conference from './pages/Conference/Conference';
 import ForgotPassword from './pages/ForgotPassword/ForgotPassword';
 import ResetPassword from './pages/ResetPassword/ResetPassword';
+import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 
 /**
  * Root component that orchestrates the entire application
@@ -20,6 +21,7 @@ import ResetPassword from './pages/ResetPassword/ResetPassword';
  * - Automatic scroll on page change
  * - Persistent navigation (Navbar and Footer)
  * - Declarative routing with React Router
+ * - Protected routes for authenticated-only pages
  *
  * @returns {JSX.Element} Complete application structure
  */
@@ -47,8 +49,12 @@ const App: FC = () => {
       {/* REUNIÓN */}
       <Route path="/meeting" element={<Meeting />} />
 
-      {/* PERFIL DE USUARIO */}
-      <Route path="/profile" element={<Profile />} />
+      {/* PERFIL DE USUARIO - PROTECTED */}
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <Profile />
+        </ProtectedRoute>
+      } />
 
       {/* CONFERENCIA */}
       <Route path="/conference/:meetingId" element={<Conference />} />
