@@ -82,13 +82,26 @@ export const useWebRTC = (
         setLocalStream(stream);
 
         // Create peer instance
+        // Create peer instance
         const PEER_SERVER_URL = import.meta.env.VITE_PEER_SERVER_URL || 'localhost';
-        const PEER_SERVER_PORT = import.meta.env.VITE_PEER_SERVER_PORT || '9000';
-        
+        // If we are in production (Render), we likely use 443 (https) or 80 (http). 
+        // If localhost, we use the port from env or 3000.
+        // IMPORTANT: We are now running PeerServer on the SAME port as the WebRTC server.
+        const PEER_SERVER_PORT = import.meta.env.VITE_PEER_SERVER_PORT ? parseInt(import.meta.env.VITE_PEER_SERVER_PORT) : 3000;
+
+        const isSecure = PEER_SERVER_URL !== 'localhost'; // Simple check, can be improved
+
         const peer = new Peer({
           host: PEER_SERVER_URL,
-          port: parseInt(PEER_SERVER_PORT),
+          port: PEER_SERVER_PORT,
           path: '/peerjs',
+          secure: isSecure,
+          config: {
+            iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+              { urls: 'stun:stun1.l.google.com:19302' },
+            ],
+          },
         });
 
         peerInstance.current = peer;
@@ -103,14 +116,14 @@ export const useWebRTC = (
         // Handle incoming calls
         peer.on('call', (call) => {
           console.log('📞 Receiving call from:', call.peer);
-          
+
           // Answer with local stream
           call.answer(stream);
 
           // Receive remote stream
           call.on('stream', (remoteStream) => {
             console.log('🔊 Received remote stream from:', call.peer);
-            
+
             const peerConnection: PeerConnection = {
               peerId: call.peer,
               userName: 'Usuario',
