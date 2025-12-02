@@ -25,7 +25,7 @@ export const useSocket = (serverUrl: string, autoConnect: boolean = false) => {
         if (autoConnect && !socketRef.current) {
             // Create socket connection
             socketRef.current = io(serverUrl, {
-                transports: ['websocket', 'polling'],
+                transports: ['polling', 'websocket'], // Try polling first for maximum reliability
                 reconnection: true,
                 reconnectionAttempts: 5,
                 reconnectionDelay: 1000,
@@ -63,7 +63,7 @@ export const useSocket = (serverUrl: string, autoConnect: boolean = false) => {
     const connect = () => {
         if (!socketRef.current) {
             socketRef.current = io(serverUrl, {
-                transports: ['websocket', 'polling'],
+                transports: ['polling', 'websocket'],
                 reconnection: true,
                 reconnectionAttempts: 5,
                 reconnectionDelay: 1000,

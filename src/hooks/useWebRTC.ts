@@ -106,12 +106,20 @@ export const useWebRTC = (
 
         peerInstance.current = peer;
 
-        // When peer is ready, join the room
-        peer.on('open', (peerId) => {
-          console.log('🎙️ Peer connected with ID:', peerId);
-          socket.emit('join-room', { roomId, peerId, userName });
-          setIsInitialized(true);
+        // When peer is ready, try to join room
+        peer.on('open', (id) => {
+          console.log('🎙️ Peer connected with ID:', id);
+          if (socket && socket.connected) {
+            console.log('🔗 Socket ready, joining room...');
+            socket.emit('join-room', { roomId, peerId: id, userName });
+            setIsInitialized(true);
+          } else {
+            console.log('⏳ Peer ready but socket not connected yet...');
+          }
         });
+
+        // ... (rest of initWebRTC)
+
 
         // Handle incoming calls
         peer.on('call', (call) => {
@@ -174,6 +182,20 @@ export const useWebRTC = (
       peersRef.current.clear();
     };
   }, [socket, roomId, userName]);
+
+  /**
+   * Handle socket reconnection or late connection
+   */
+  useEffect(() => {
+    if (socket && socket.connected && peerInstance.current && !isInitialized) {
+      const peerId = peerInstance.current.id;
+      if (peerId) {
+        console.log('🔗 Socket reconnected/ready, joining room with PeerID:', peerId);
+        socket.emit('join-room', { roomId, peerId, userName });
+        setIsInitialized(true);
+      }
+    }
+  }, [socket, socket?.connected, roomId, userName, isInitialized]);
 
   /**
    * Handle new user joining the room
