@@ -4,9 +4,11 @@ import Navbar from '../components/navbar/Navbar';
 import Hero from '../components/hero/Hero';
 import Startmeet from '../components/startmeet/Startmeet';
 import Footer from '../components/footer/Footer';
+import { useAuth } from '../contexts/AuthContext';
 
 const Home = () => {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     // Check if there's a hash in the URL
@@ -26,7 +28,7 @@ const Home = () => {
   return (
     <>
       <Navbar />
-      <Hero />
+      {!isAuthenticated && <Hero />}
       <Startmeet />
       <Footer />
     </>

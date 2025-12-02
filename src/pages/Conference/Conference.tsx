@@ -18,10 +18,11 @@
 import { useState, useEffect, useRef, type FC, type FormEvent, type ChangeEvent } from 'react';
 import { IoMdSend } from 'react-icons/io';
 import { MdCallEnd } from 'react-icons/md';
-import { BsMicFill, BsMicMuteFill, BsCameraVideoFill, BsCameraVideoOffFill } from 'react-icons/bs';
+import { BsMicFill, BsMicMuteFill, BsCameraVideoFill, BsCameraVideoOffFill, BsChatDotsFill } from 'react-icons/bs';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../hooks/useSocket';
+import { useWebRTC } from '../../hooks/useWebRTC';
 import './Conference.scss';
 
 /**
@@ -60,14 +61,28 @@ const Conference: FC = () => {
   const CHAT_SERVER_URL = import.meta.env.VITE_CHAT_SERVER_URL || 'http://localhost:3001';
   const { socket, isConnected } = useSocket(CHAT_SERVER_URL, true);
 
+  // WebRTC connection for audio
+  const WEBRTC_SERVER_URL = import.meta.env.VITE_WEBRTC_SERVER_URL || 'http://localhost:3000';
+  const { socket: webrtcSocket } = useSocket(WEBRTC_SERVER_URL, true);
+  const { 
+    isMuted, 
+    toggleMute: toggleWebRTCMute, 
+    isInitialized: isWebRTCInitialized,
+    error: webrtcError 
+  } = useWebRTC(
+    webrtcSocket, 
+    meetingId || '', 
+    user?.firstName || user?.name || 'Usuario'
+  );
+
   // State
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [participantCount, setParticipantCount] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [error, setError] = useState('');
   const [isJoining, setIsJoining] = useState(true);
 
@@ -81,6 +96,25 @@ const Conference: FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  /**
+   * Remove body padding and overflow on mount
+   */
+  useEffect(() => {
+    // Save original styles
+    const originalPadding = document.body.style.paddingTop;
+    const originalOverflow = document.body.style.overflow;
+
+    // Apply conference styles
+    document.body.style.paddingTop = '0';
+    document.body.style.overflow = 'hidden';
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.paddingTop = originalPadding;
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
 
   /**
    * Join meeting on component mount
@@ -136,6 +170,19 @@ const Conference: FC = () => {
     }) => {
       console.log('👋 User joined:', data.name);
       setParticipantCount(data.participantCount);
+      // Add new participant to local state
+      setParticipants(prev => {
+        // Check if participant already exists to avoid duplicates
+        if (prev.some(p => p.uid === data.uid)) {
+          return prev;
+        }
+        return [...prev, {
+          uid: data.uid,
+          name: data.name,
+          socketId: '',
+          joinedAt: new Date(),
+        }];
+      });
     });
 
     // Listen for participants leaving
@@ -145,6 +192,8 @@ const Conference: FC = () => {
     }) => {
       console.log('👋 User left:', data.name);
       setParticipantCount(data.participantCount);
+      // Remove participant from local state by name
+      setParticipants(prev => prev.filter(p => p.name !== data.name));
     });
 
     // Listen for new messages
@@ -193,10 +242,10 @@ const Conference: FC = () => {
   };
 
   /**
-   * Toggles microphone mute state
+   * Toggles microphone mute state using WebRTC
    */
   const toggleMute = (): void => {
-    setIsMuted(!isMuted);
+    toggleWebRTCMute();
   };
 
   /**
@@ -207,12 +256,22 @@ const Conference: FC = () => {
   };
 
   /**
+   * Toggles chat visibility
+   */
+  const toggleChat = (): void => {
+    setIsChatOpen(!isChatOpen);
+  };
+
+  /**
    * Handles ending the call
    */
   const handleEndCall = (): void => {
     setShowExitModal(false);
     if (socket) {
       socket.disconnect();
+    }
+    if (webrtcSocket) {
+      webrtcSocket.disconnect();
     }
     navigate('/');
   };
@@ -244,10 +303,12 @@ const Conference: FC = () => {
         <div className="conference__loading">
           <div className="conference__spinner"></div>
           <p>Uniéndose a la reunión {meetingId}...</p>
+          {!isWebRTCInitialized && <p className="conference__loading-info">🎙️ Conectando audio...</p>}
+          {webrtcError && <p className="conference__error-info">⚠️ {webrtcError}</p>}
         </div>
       </div>
     );
-  }
+  };
 
   // Show error state
   if (error) {
@@ -277,11 +338,20 @@ const Conference: FC = () => {
           <div className="conference__connection-status">
             {isConnected ? (
               <span className="conference__status conference__status--connected">
-                🟢 Conectado
+                🟢 Chat conectado
               </span>
             ) : (
               <span className="conference__status conference__status--disconnected">
-                🔴 Desconectado
+                🔴 Chat desconectado
+              </span>
+            )}
+            {isWebRTCInitialized ? (
+              <span className="conference__status conference__status--connected">
+                🎙️ Audio conectado
+              </span>
+            ) : (
+              <span className="conference__status conference__status--disconnected">
+                🎙️ Audio desconectado
               </span>
             )}
           </div>
@@ -322,6 +392,14 @@ const Conference: FC = () => {
           </button>
 
           <button
+            className={`conference__control-btn ${isChatOpen ? 'conference__control-btn--chat-active' : ''}`}
+            onClick={toggleChat}
+            aria-label={isChatOpen ? 'Cerrar chat' : 'Abrir chat'}
+          >
+            <BsChatDotsFill />
+          </button>
+
+          <button
             className="conference__control-btn conference__control-btn--end"
             onClick={() => setShowExitModal(true)}
             aria-label="Finalizar llamada"
@@ -331,13 +409,29 @@ const Conference: FC = () => {
         </div>
       </div>
 
+      {/* Chat overlay for mobile */}
+      {isChatOpen && (
+        <div 
+          className="conference__chat-overlay" 
+          onClick={toggleChat}
+          aria-label="Cerrar chat"
+        />
+      )}
+
       {/* Chat panel */}
-      <div className="conference__chat">
+      <div className={`conference__chat ${isChatOpen ? 'conference__chat--open' : ''}`}>
         <div className="conference__chat-header">
           <h2>Chat</h2>
           <span className="conference__message-count">
             {messages.length} {messages.length === 1 ? 'mensaje' : 'mensajes'}
           </span>
+          <button
+            className="conference__close-chat"
+            onClick={toggleChat}
+            aria-label="Cerrar chat"
+          >
+            ×
+          </button>
         </div>
 
         <div className="conference__messages">
