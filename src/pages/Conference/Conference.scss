@@ -9,6 +9,8 @@
   position: fixed;
   top: 0;
   left: 0;
+  width: 100%;
+  z-index: 1000;
 
   @include mixins.respond(tab-port) {
     flex-direction: column;
@@ -341,46 +343,48 @@
 
   &__message {
     max-width: 75%;
-    padding: 0.75rem 1rem;
-    border-radius: 1rem;
+    padding: 0.9rem 1.2rem;
+    border-radius: 1.2rem;
     animation: slideIn 0.3s ease;
     position: relative;
     align-self: flex-start;
-    background: rgba(60, 60, 80, 0.6);
+    background: rgba(60, 60, 80, 0.9);
     margin-bottom: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 
-    // Tail pointer for others' messages (left side)
+    // Tail for others (left)
     &::before {
       content: "";
       position: absolute;
-      bottom: -0.01rem;
-      left: 0px;
-      transform: rotate(90deg);
-      width: 0;
-      height: 0;
-      border-style: solid;
-      border-width: 0 0 8px 8px;
-      border-color: transparent transparent rgba(60, 60, 80, 0.6) transparent;
+      bottom: 0;
+      left: -8px;
+      width: 12px;
+      height: 16px;
+      background: inherit;
+      border-bottom-right-radius: 12px;
+      clip-path: polygon(0 100%, 100% 100%, 100% 0);
     }
 
     // Own messages styling
     &--own {
       align-self: flex-end;
-      background: linear-gradient(135deg, rgba(63, 232, 171, 0.25), rgba(120, 205, 205, 0.25));
-      border: 1px solid rgba(63, 232, 171, 0.3);
+      background: linear-gradient(135deg, rgba(63, 232, 171, 0.35), rgba(120, 205, 205, 0.35));
+      border: 1px solid rgba(63, 232, 171, 0.5);
+      box-shadow: 0 2px 8px rgba(63, 232, 171, 0.2);
 
-      // Tail pointer for own messages (right side)
+      // Tail for own (right)
       &::before {
         left: auto;
-        right: -0.05rem;
-        transform: rotate(90deg);
-        top: 4.26rem;
-        border-width: 0 8px 8px 0;
-        border-color: transparent rgba(63, 232, 171, 0.25) transparent transparent;
+        right: -8px;
+        border-bottom-right-radius: 0;
+        border-bottom-left-radius: 12px;
+        clip-path: polygon(0 0, 0 100%, 100% 100%);
       }
 
       .conference__message-user {
         color: var(--medium-turquoise);
+        font-weight: 700;
       }
     }
   }
