@@ -45,6 +45,7 @@
     @include mixins.respond(phone) {
       grid-template-columns: 1fr;
       padding: 1rem 0.5rem;
+      padding-bottom: 5rem; // Add padding to avoid overlap with fixed controls
     }
   }
 
@@ -111,10 +112,17 @@
     background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(10px);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 100;
 
     @include mixins.respond(phone) {
       gap: 0.75rem;
       padding: 1rem;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(10, 14, 39, 0.95);
+      border-top: 1px solid rgba(63, 232, 171, 0.2);
     }
   }
 
@@ -169,6 +177,34 @@
     }
   }
 
+  &__notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #ff4757;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border: 2px solid #0a0e27;
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes popIn {
+    from {
+      transform: scale(0);
+    }
+
+    to {
+      transform: scale(1);
+    }
+  }
+
   &__chat-overlay {
     position: fixed;
     top: 0;
@@ -193,6 +229,7 @@
     from {
       opacity: 0;
     }
+
     to {
       opacity: 1;
     }

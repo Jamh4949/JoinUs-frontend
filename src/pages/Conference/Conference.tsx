@@ -64,14 +64,14 @@ const Conference: FC = () => {
   // WebRTC connection for audio
   const WEBRTC_SERVER_URL = import.meta.env.VITE_WEBRTC_SERVER_URL || 'http://localhost:3000';
   const { socket: webrtcSocket } = useSocket(WEBRTC_SERVER_URL, true);
-  const { 
-    isMuted, 
-    toggleMute: toggleWebRTCMute, 
+  const {
+    isMuted,
+    toggleMute: toggleWebRTCMute,
     isInitialized: isWebRTCInitialized,
-    error: webrtcError 
+    error: webrtcError
   } = useWebRTC(
-    webrtcSocket, 
-    meetingId || '', 
+    webrtcSocket,
+    meetingId || '',
     user?.firstName || user?.name || 'Usuario'
   );
 
@@ -85,6 +85,7 @@ const Conference: FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [error, setError] = useState('');
   const [isJoining, setIsJoining] = useState(true);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   /**
    * Scroll to bottom of messages
@@ -95,7 +96,7 @@ const Conference: FC = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isChatOpen]);
 
   /**
    * Remove body padding and overflow on mount
@@ -200,6 +201,11 @@ const Conference: FC = () => {
     socket.on('new-message', (newMessage: ChatMessage) => {
       console.log('💬 New message:', newMessage);
       setMessages(prev => [...prev, newMessage]);
+
+      // Increment unread count if chat is closed
+      if (!isChatOpen) {
+        setUnreadMessages(prev => prev + 1);
+      }
     });
 
     // Listen for errors
@@ -217,7 +223,7 @@ const Conference: FC = () => {
       socket.off('new-message');
       socket.off('error');
     };
-  }, [socket, isConnected, meetingId, user, isAuthenticated, navigate]);
+  }, [socket, isConnected, meetingId, user, isAuthenticated, navigate, isChatOpen]);
 
   /**
    * Handles message input change
@@ -259,7 +265,13 @@ const Conference: FC = () => {
    * Toggles chat visibility
    */
   const toggleChat = (): void => {
-    setIsChatOpen(!isChatOpen);
+    const newChatState = !isChatOpen;
+    setIsChatOpen(newChatState);
+
+    // Reset unread count when opening chat
+    if (newChatState) {
+      setUnreadMessages(0);
+    }
   };
 
   /**
@@ -395,8 +407,14 @@ const Conference: FC = () => {
             className={`conference__control-btn ${isChatOpen ? 'conference__control-btn--chat-active' : ''}`}
             onClick={toggleChat}
             aria-label={isChatOpen ? 'Cerrar chat' : 'Abrir chat'}
+            style={{ position: 'relative' }}
           >
             <BsChatDotsFill />
+            {unreadMessages > 0 && (
+              <span className="conference__notification-badge">
+                {unreadMessages > 9 ? '9+' : unreadMessages}
+              </span>
+            )}
           </button>
 
           <button
@@ -411,8 +429,8 @@ const Conference: FC = () => {
 
       {/* Chat overlay for mobile */}
       {isChatOpen && (
-        <div 
-          className="conference__chat-overlay" 
+        <div
+          className="conference__chat-overlay"
           onClick={toggleChat}
           aria-label="Cerrar chat"
         />
