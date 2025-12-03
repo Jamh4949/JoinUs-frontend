@@ -66,7 +66,7 @@ export const useWebRTC = (
   roomId: string,
   userName: string
 ): UseWebRTC => {
-  const [peers, setPeers] = useState<Map<string, PeerConnection>>(new Map());
+  const [_peers, setPeers] = useState<Map<string, PeerConnection>>(new Map());
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
