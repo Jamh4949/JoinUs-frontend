@@ -8,6 +8,9 @@ import { getAuth,
     type Auth
     } from "firebase/auth";
 
+/**
+ * Firebase configuration object using environment variables.
+ */
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
@@ -37,7 +40,11 @@ export { auth };
 
 const provider = auth ? new GoogleAuthProvider() : null;
 
-
+/**
+ * Logs in the user using Google OAuth.
+ * @returns {Promise<User>} The authenticated user object.
+ * @throws {Error} If Firebase is not configured or login fails.
+ */
 export const loginWithGoogle = async () => {
   if (!auth || !provider) {
     throw new Error("Firebase no está configurado. Por favor, configura las variables de entorno de Firebase.");
@@ -63,6 +70,11 @@ export const loginWithGoogle = async () => {
 
 const githubProvider = auth ? new GithubAuthProvider() : null;
 
+/**
+ * Logs in the user using GitHub OAuth.
+ * @returns {Promise<User>} The authenticated user object.
+ * @throws {Error} If Firebase is not configured or login fails.
+ */
 export const loginWithGithub = async () => {
   if (!auth || !githubProvider) {
     throw new Error("Firebase no está configurado. Por favor, configura las variables de entorno de Firebase.");
@@ -87,7 +99,13 @@ export const loginWithGithub = async () => {
   }
 };
 
-// EMAIL
+/**
+ * Logs in the user using email and password.
+ * @param {string} email - The user's email.
+ * @param {string} password - The user's password.
+ * @returns {Promise<User>} The authenticated user object.
+ * @throws {Error} If Firebase is not configured or login fails.
+ */
 export const loginWithEmail = async (email: string, password: string) => {
   if (!auth) {
     throw new Error("Firebase no está configurado. Por favor, configura las variables de entorno de Firebase.");

@@ -21,37 +21,51 @@ import { Socket } from 'socket.io-client';
  * Type definition for peer connections
  */
 type PeerConnection = {
+  /** Unique identifier for the peer */
   peerId: string;
+  /** Display name of the user */
   userName: string;
+  /** The PeerJS call object */
   call: any;
+  /** The remote media stream */
   stream: MediaStream | null;
 };
 
 /**
- * Type definition for WebRTC hook return value
+ * Interface representing the return values of the useWebRTC hook.
  */
-type UseWebRTCReturn = {
-  peers: Map<string, PeerConnection>;
-  localStream: MediaStream | null;
+interface UseWebRTC {
+  /** The current mute state of the local audio stream */
   isMuted: boolean;
+  /** Function to toggle the mute state */
   toggleMute: () => void;
+  /** Boolean indicating if the WebRTC connection is fully initialized */
   isInitialized: boolean;
+  /** Error message if any error occurs during connection */
   error: string | null;
-};
+}
 
 /**
- * WebRTC hook for managing peer connections and audio streams
+ * Custom hook for handling WebRTC audio connections using PeerJS.
  * 
- * @param {Socket | null} socket - Socket.IO connection for signaling
- * @param {string} roomId - Room ID to join
- * @param {string} userName - User's display name
- * @returns {UseWebRTCReturn} WebRTC state and controls
+ * This hook manages the lifecycle of a PeerJS connection, handles incoming calls,
+ * and manages the local audio stream. It integrates with Socket.IO for signaling.
+ * 
+ * @param socket - The Socket.IO client instance used for signaling.
+ * @param roomId - The ID of the room to join.
+ * @param userName - The name of the local user.
+ * @returns {UseWebRTC} An object containing the mute state, toggle function, initialization status, and any errors.
+ * 
+ * @example
+ * ```tsx
+ * const { isMuted, toggleMute } = useWebRTC(socket, 'room-123', 'Alice');
+ * ```
  */
 export const useWebRTC = (
   socket: Socket | null,
   roomId: string,
   userName: string
-): UseWebRTCReturn => {
+): UseWebRTC => {
   const [peers, setPeers] = useState<Map<string, PeerConnection>>(new Map());
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [isMuted, setIsMuted] = useState(false);
@@ -82,14 +96,10 @@ export const useWebRTC = (
         setLocalStream(stream);
 
         // Create peer instance
-        // Create peer instance
         const PEER_SERVER_URL = import.meta.env.VITE_PEER_SERVER_URL || 'localhost';
-        // If we are in production (Render), we likely use 443 (https) or 80 (http). 
-        // If localhost, we use the port from env or 3000.
-        // IMPORTANT: We are now running PeerServer on the SAME port as the WebRTC server.
         const PEER_SERVER_PORT = import.meta.env.VITE_PEER_SERVER_PORT ? parseInt(import.meta.env.VITE_PEER_SERVER_PORT) : 3000;
 
-        const isSecure = PEER_SERVER_URL !== 'localhost'; // Simple check, can be improved
+        const isSecure = PEER_SERVER_URL !== 'localhost';
 
         const peer = new Peer({
           host: PEER_SERVER_URL,
@@ -117,9 +127,6 @@ export const useWebRTC = (
             console.log('⏳ Peer ready but socket not connected yet...');
           }
         });
-
-        // ... (rest of initWebRTC)
-
 
         // Handle incoming calls
         peer.on('call', (call) => {
@@ -257,39 +264,33 @@ export const useWebRTC = (
   }, [socket, localStream]);
 
   /**
-   * Play audio stream through Audio element
+   * Helper function to play audio stream
+   * 
+   * @param stream - The MediaStream to play
    */
   const playAudioStream = (stream: MediaStream) => {
     const audio = new Audio();
     audio.srcObject = stream;
-    audio.autoplay = true;
-    audio.play().catch(err => {
-      console.error('❌ Failed to play audio:', err);
-    });
+    audio.play().catch(err => console.error('Error playing audio:', err));
   };
 
   /**
-   * Toggle mute/unmute local audio stream
-   * This is a local-only operation - no backend notification needed
+   * Toggle mute state of local audio track
    */
   const toggleMute = useCallback(() => {
-    if (!localStream) return;
-
-    const audioTrack = localStream.getAudioTracks()[0];
-    if (audioTrack) {
-      audioTrack.enabled = !audioTrack.enabled;
-      setIsMuted(!audioTrack.enabled);
-
-      console.log(`🔇 Audio ${!audioTrack.enabled ? 'muted' : 'unmuted'}`);
+    if (localStream) {
+      const audioTrack = localStream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setIsMuted(!audioTrack.enabled);
+      }
     }
   }, [localStream]);
 
   return {
-    peers,
-    localStream,
     isMuted,
     toggleMute,
     isInitialized,
-    error,
+    error
   };
 };

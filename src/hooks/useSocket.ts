@@ -11,11 +11,20 @@ import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
 /**
- * Custom hook for Socket.IO connection management
+ * Custom hook for managing a Socket.IO connection.
  * 
- * @param {string} serverUrl - Socket.IO server URL
- * @param {boolean} autoConnect - Whether to connect automatically
- * @returns {Object} Socket instance and connection status
+ * This hook handles the lifecycle of a Socket.IO client, including connection,
+ * disconnection, and reconnection logic. It provides the socket instance and
+ * the current connection status.
+ * 
+ * @param serverUrl - The URL of the Socket.IO server to connect to.
+ * @param autoConnect - Whether to connect automatically on mount. Defaults to true.
+ * @returns An object containing the socket instance, connection status, and manual connect/disconnect functions.
+ * 
+ * @example
+ * ```tsx
+ * const { socket, isConnected } = useSocket('http://localhost:3000');
+ * ```
  */
 export const useSocket = (serverUrl: string, autoConnect: boolean = false) => {
     const [isConnected, setIsConnected] = useState(false);
