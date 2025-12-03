@@ -86,6 +86,7 @@ const Conference: FC = () => {
   const [error, setError] = useState('');
   const [isJoining, setIsJoining] = useState(true);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [isCreator, setIsCreator] = useState(false);
 
   /**
    * Scroll to bottom of messages
@@ -147,11 +148,13 @@ const Conference: FC = () => {
       meetingId: string;
       participants: Participant[];
       messages: ChatMessage[];
+      createdBy: string;
     }) => {
       console.log('✅ Joined meeting:', data.meetingId);
       setParticipants(data.participants);
       setParticipantCount(data.participants.length);
       setMessages(data.messages);
+      setIsCreator(data.createdBy === user?.uid);
       setIsJoining(false);
     });
 
@@ -208,6 +211,12 @@ const Conference: FC = () => {
       }
     });
 
+    // Listen for meeting ended
+    socket.on('meeting-ended', () => {
+      alert('La reunión ha sido finalizada por el anfitrión.');
+      handleEndCall();
+    });
+
     // Listen for errors
     socket.on('error', (data: { message: string }) => {
       console.error('❌ Socket error:', data.message);
@@ -221,6 +230,7 @@ const Conference: FC = () => {
       socket.off('user-joined');
       socket.off('user-left');
       socket.off('new-message');
+      socket.off('meeting-ended');
       socket.off('error');
     };
   }, [socket, isConnected, meetingId, user, isAuthenticated, navigate, isChatOpen]);
@@ -286,6 +296,36 @@ const Conference: FC = () => {
       webrtcSocket.disconnect();
     }
     navigate('/');
+  };
+
+  /**
+   * Handles ending the meeting for everyone (host only)
+   */
+  const handleEndMeetingForAll = async (): Promise<void> => {
+    if (!socket || !isConnected) return;
+
+    try {
+      const response = await fetch(`${CHAT_SERVER_URL}/api/meetings/end`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          meetingId,
+          uid: user?.uid,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al finalizar la reunión');
+      }
+      
+      // The socket event 'meeting-ended' will handle the cleanup
+    } catch (error: any) {
+      console.error('Error ending meeting:', error);
+      alert(error.message);
+    }
   };
 
   /**
@@ -506,13 +546,24 @@ const Conference: FC = () => {
                 className="conference__modal-btn conference__modal-btn--no"
                 onClick={() => setShowExitModal(false)}
               >
-                No
+                Cancelar
               </button>
+              
+              {isCreator && (
+                <button
+                  className="conference__modal-btn conference__modal-btn--end-all"
+                  onClick={handleEndMeetingForAll}
+                  style={{ backgroundColor: '#e74c3c', marginRight: '10px' }}
+                >
+                  Finalizar para todos
+                </button>
+              )}
+
               <button
                 className="conference__modal-btn conference__modal-btn--yes"
                 onClick={handleEndCall}
               >
-                Sí
+                Salir
               </button>
             </div>
           </div>
