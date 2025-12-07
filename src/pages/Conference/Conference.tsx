@@ -61,14 +61,18 @@ const Conference: FC = () => {
   const CHAT_SERVER_URL = import.meta.env.VITE_CHAT_SERVER_URL || 'http://localhost:3001';
   const { socket, isConnected } = useSocket(CHAT_SERVER_URL, true);
 
-  // WebRTC connection for audio
+  // WebRTC connection for audio and video
   const WEBRTC_SERVER_URL = import.meta.env.VITE_WEBRTC_SERVER_URL || 'http://localhost:3000';
   const { socket: webrtcSocket } = useSocket(WEBRTC_SERVER_URL, true);
   const {
     isMuted,
+    isVideoOff,
     toggleMute: toggleWebRTCMute,
+    toggleVideo: toggleWebRTCVideo,
     isInitialized: isWebRTCInitialized,
-    error: webrtcError
+    error: webrtcError,
+    localStream,
+    peers: webrtcPeers
   } = useWebRTC(
     webrtcSocket,
     meetingId || '',
@@ -78,15 +82,17 @@ const Conference: FC = () => {
   // State
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [participants, setParticipants] = useState<Participant[]>([]);
   const [participantCount, setParticipantCount] = useState(0);
-  const [isVideoOff, setIsVideoOff] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [error, setError] = useState('');
   const [isJoining, setIsJoining] = useState(true);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [isCreator, setIsCreator] = useState(false);
+
+  // Refs for video elements
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
 
   /**
    * Scroll to bottom of messages
@@ -151,7 +157,6 @@ const Conference: FC = () => {
       createdBy: string;
     }) => {
       console.log('✅ Joined meeting:', data.meetingId);
-      setParticipants(data.participants);
       setParticipantCount(data.participants.length);
       setMessages(data.messages);
       setIsCreator(data.createdBy === user?.uid);
@@ -174,19 +179,6 @@ const Conference: FC = () => {
     }) => {
       console.log('👋 User joined:', data.name);
       setParticipantCount(data.participantCount);
-      // Add new participant to local state
-      setParticipants(prev => {
-        // Check if participant already exists to avoid duplicates
-        if (prev.some(p => p.uid === data.uid)) {
-          return prev;
-        }
-        return [...prev, {
-          uid: data.uid,
-          name: data.name,
-          socketId: '',
-          joinedAt: new Date(),
-        }];
-      });
     });
 
     // Listen for participants leaving
@@ -196,8 +188,6 @@ const Conference: FC = () => {
     }) => {
       console.log('👋 User left:', data.name);
       setParticipantCount(data.participantCount);
-      // Remove participant from local state by name
-      setParticipants(prev => prev.filter(p => p.name !== data.name));
     });
 
     // Listen for new messages
@@ -236,7 +226,32 @@ const Conference: FC = () => {
   }, [socket, isConnected, meetingId, user, isAuthenticated, navigate, isChatOpen]);
 
   /**
-   * Handles message input change
+   * Attach local video stream to video element
+   */
+  useEffect(() => {
+    if (localStream && localVideoRef.current) {
+      // Force reconnection to ensure video displays after toggle
+      localVideoRef.current.srcObject = null;
+      localVideoRef.current.srcObject = localStream;
+    }
+  }, [localStream, isVideoOff]); // Added isVideoOff dependency
+
+  /**
+   * Attach remote peer streams to video elements
+   */
+  useEffect(() => {
+    webrtcPeers.forEach((peer, peerId) => {
+      if (peer.stream) {
+        const videoElement = remoteVideoRefs.current.get(peerId);
+        if (videoElement && videoElement.srcObject !== peer.stream) {
+          videoElement.srcObject = peer.stream;
+        }
+      }
+    });
+  }, [webrtcPeers]);
+
+  /**
+   * Handles input change for message
    */
   const handleMessageChange = (e: ChangeEvent<HTMLInputElement>): void => {
     setMessage(e.target.value);
@@ -265,10 +280,10 @@ const Conference: FC = () => {
   };
 
   /**
-   * Toggles video on/off state
+   * Toggles video on/off state using WebRTC
    */
   const toggleVideo = (): void => {
-    setIsVideoOff(!isVideoOff);
+    toggleWebRTCVideo();
   };
 
   /**
@@ -320,7 +335,7 @@ const Conference: FC = () => {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Error al finalizar la reunión');
       }
-      
+
       // The socket event 'meeting-ended' will handle the cleanup
     } catch (error: any) {
       console.error('Error ending meeting:', error);
@@ -360,7 +375,7 @@ const Conference: FC = () => {
         </div>
       </div>
     );
-  };
+  }
 
   // Show error state
   if (error) {
@@ -406,20 +421,65 @@ const Conference: FC = () => {
                 🎙️ Audio desconectado
               </span>
             )}
+            {localStream && localStream.getVideoTracks().length > 0 ? (
+              <span className="conference__status conference__status--connected">
+                🎥 Video conectado
+              </span>
+            ) : (
+              <span className="conference__status conference__status--disconnected">
+                🎥 Video desconectado
+              </span>
+            )}
           </div>
         </div>
 
         {/* Participants grid */}
         <div className="conference__participants">
-          {Array.from({ length: Math.min(participantCount, 4) }).map((_, index) => (
-            <div key={index} className="conference__participant">
-              <div className="conference__participant-video">
+          {/* Local user video */}
+          <div className="conference__participant conference__participant--local">
+            <div className="conference__participant-video">
+              {!isVideoOff && localStream ? (
+                <video
+                  ref={localVideoRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className="conference__video-element"
+                />
+              ) : (
                 <div className="conference__participant-avatar">
-                  {getInitials(participants[index]?.name || 'Usuario')}
+                  {getInitials(user?.firstName || user?.name || 'Usuario')}
                 </div>
+              )}
+            </div>
+            <span className="conference__participant-name">
+              {user?.firstName || user?.name || 'Tú'} (Tú)
+            </span>
+          </div>
+
+          {/* Remote participants */}
+          {Array.from(webrtcPeers.entries()).slice(0, 9).map(([peerId, peer]) => (
+            <div key={peerId} className="conference__participant">
+              <div className="conference__participant-video">
+                {peer.stream ? (
+                  <video
+                    ref={(el) => {
+                      if (el) {
+                        remoteVideoRefs.current.set(peerId, el);
+                      }
+                    }}
+                    autoPlay
+                    playsInline
+                    className="conference__video-element"
+                  />
+                ) : (
+                  <div className="conference__participant-avatar">
+                    {getInitials(peer.userName || 'Usuario')}
+                  </div>
+                )}
               </div>
               <span className="conference__participant-name">
-                {participants[index]?.name || 'Cargando...'}
+                {peer.userName || 'Usuario'}
               </span>
             </div>
           ))}
@@ -548,7 +608,7 @@ const Conference: FC = () => {
               >
                 Cancelar
               </button>
-              
+
               {isCreator && (
                 <button
                   className="conference__modal-btn conference__modal-btn--end-all"

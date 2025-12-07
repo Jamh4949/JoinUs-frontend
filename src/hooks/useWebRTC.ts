@@ -1,13 +1,13 @@
 /**
- * WebRTC Hook for Real-Time Audio Communication
+ * WebRTC Hook for Real-Time Audio and Video Communication
  * 
- * Manages WebRTC peer connections, audio streams, and mute/unmute functionality.
+ * Manages WebRTC peer connections, audio/video streams, and media controls.
  * Uses PeerJS for simplified WebRTC implementation and Socket.IO for signaling.
  * 
  * Features:
- * - Audio stream capture and management
+ * - Audio and video stream capture and management
  * - Peer connection handling
- * - Real-time mute/unmute
+ * - Real-time mute/unmute and video on/off
  * - Automatic cleanup
  * 
  * @module useWebRTC
@@ -37,12 +37,20 @@ type PeerConnection = {
 interface UseWebRTC {
   /** The current mute state of the local audio stream */
   isMuted: boolean;
+  /** The current video off state */
+  isVideoOff: boolean;
   /** Function to toggle the mute state */
   toggleMute: () => void;
+  /** Function to toggle the video state */
+  toggleVideo: () => void;
   /** Boolean indicating if the WebRTC connection is fully initialized */
   isInitialized: boolean;
   /** Error message if any error occurs during connection */
   error: string | null;
+  /** Local media stream (for video rendering) */
+  localStream: MediaStream | null;
+  /** Map of peer connections with their streams */
+  peers: Map<string, PeerConnection>;
 }
 
 /**
@@ -66,14 +74,16 @@ export const useWebRTC = (
   roomId: string,
   userName: string
 ): UseWebRTC => {
-  const [_peers, setPeers] = useState<Map<string, PeerConnection>>(new Map());
+  const [peers, setPeers] = useState<Map<string, PeerConnection>>(new Map());
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const peerInstance = useRef<Peer | null>(null);
   const peersRef = useRef<Map<string, PeerConnection>>(new Map());
+  const audioElementsRef = useRef<Map<string, HTMLAudioElement>>(new Map());
 
   /**
    * Initialize WebRTC: get audio stream and create peer instance
@@ -83,14 +93,18 @@ export const useWebRTC = (
 
     const initWebRTC = async () => {
       try {
-        // Get user's audio stream
+        // Get user's audio and video stream
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: {
             echoCancellation: true,
             noiseSuppression: true,
             autoGainControl: true,
           },
-          video: false,
+          video: {
+            width: { ideal: 1280, max: 1920 },
+            height: { ideal: 720, max: 1080 },
+            facingMode: 'user',
+          },
         });
 
         setLocalStream(stream);
@@ -150,7 +164,7 @@ export const useWebRTC = (
             setPeers(new Map(peersRef.current));
 
             // Play audio
-            playAudioStream(remoteStream);
+            playAudioStream(remoteStream, call.peer);
           });
 
           call.on('close', () => {
@@ -167,7 +181,7 @@ export const useWebRTC = (
 
       } catch (err) {
         console.error('❌ Failed to initialize WebRTC:', err);
-        setError('No se pudo acceder al micrófono. Por favor, permite el acceso.');
+        setError('No se pudo acceder al micrófono o cámara. Por favor, permite el acceso.');
       }
     };
 
@@ -189,6 +203,34 @@ export const useWebRTC = (
       peersRef.current.clear();
     };
   }, [socket, roomId, userName]);
+
+  /**
+   * Listen for get-users event to update peer names
+   */
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleGetUsers = ({ participants }: { roomId: string; participants: Record<string, { peerId: string; userName: string }> }) => {
+      console.log('👥 Received participants list:', participants);
+
+      // Update existing peers with correct userNames
+      Object.values(participants).forEach(({ peerId, userName }) => {
+        const existingPeer = peersRef.current.get(peerId);
+        if (existingPeer && existingPeer.userName === 'Usuario') {
+          existingPeer.userName = userName;
+          peersRef.current.set(peerId, existingPeer);
+        }
+      });
+
+      setPeers(new Map(peersRef.current));
+    };
+
+    socket.on('get-users', handleGetUsers);
+
+    return () => {
+      socket.off('get-users', handleGetUsers);
+    };
+  }, [socket]);
 
   /**
    * Handle socket reconnection or late connection
@@ -231,7 +273,7 @@ export const useWebRTC = (
         setPeers(new Map(peersRef.current));
 
         // Play audio
-        playAudioStream(remoteStream);
+        playAudioStream(remoteStream, peerId);
       });
 
       call.on('close', () => {
@@ -267,11 +309,24 @@ export const useWebRTC = (
    * Helper function to play audio stream
    * 
    * @param stream - The MediaStream to play
+   * @param peerId - The peer ID for tracking
    */
-  const playAudioStream = (stream: MediaStream) => {
+  const playAudioStream = (stream: MediaStream, peerId: string) => {
+    // Remove old audio element if exists
+    const oldAudio = audioElementsRef.current.get(peerId);
+    if (oldAudio) {
+      oldAudio.srcObject = null;
+      oldAudio.remove();
+    }
+
+    // Create new audio element
     const audio = new Audio();
     audio.srcObject = stream;
+    audio.autoplay = true;
     audio.play().catch(err => console.error('Error playing audio:', err));
+
+    // Store reference
+    audioElementsRef.current.set(peerId, audio);
   };
 
   /**
@@ -287,10 +342,27 @@ export const useWebRTC = (
     }
   }, [localStream]);
 
+  /**
+   * Toggle video on/off state of local video track
+   */
+  const toggleVideo = useCallback(() => {
+    if (localStream) {
+      const videoTrack = localStream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        setIsVideoOff(!videoTrack.enabled);
+      }
+    }
+  }, [localStream]);
+
   return {
     isMuted,
+    isVideoOff,
     toggleMute,
+    toggleVideo,
     isInitialized,
-    error
+    error,
+    localStream,
+    peers
   };
 };
