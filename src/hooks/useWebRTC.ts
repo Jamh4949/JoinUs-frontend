@@ -29,6 +29,8 @@ type PeerConnection = {
   call: any;
   /** The remote media stream */
   stream: MediaStream | null;
+  /** Whether the peer has video enabled */
+  isVideoEnabled: boolean;
 };
 
 /**
@@ -51,6 +53,8 @@ interface UseWebRTC {
   localStream: MediaStream | null;
   /** Map of peer connections with their streams */
   peers: Map<string, PeerConnection>;
+  /** Check permission state */
+  permissionState: PermissionState | 'prompt' | 'denied' | 'granted';
 }
 
 /**
@@ -80,10 +84,13 @@ export const useWebRTC = (
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [permissionState, setPermissionState] = useState<PermissionState | 'prompt'>('prompt');
 
   const peerInstance = useRef<Peer | null>(null);
   const peersRef = useRef<Map<string, PeerConnection>>(new Map());
+  const participantsRef = useRef<Map<string, string>>(new Map()); // Map<peerId, userName>
   const audioElementsRef = useRef<Map<string, HTMLAudioElement>>(new Map());
+  const myPeerIdRef = useRef<string | null>(null);
 
   /**
    * Initialize WebRTC: get audio stream and create peer instance
@@ -108,6 +115,7 @@ export const useWebRTC = (
         });
 
         setLocalStream(stream);
+        setPermissionState('granted');
 
         // Create peer instance
         const PEER_SERVER_URL = import.meta.env.VITE_PEER_SERVER_URL || 'localhost';
@@ -133,6 +141,7 @@ export const useWebRTC = (
         // When peer is ready, try to join room
         peer.on('open', (id) => {
           console.log('🎙️ Peer connected with ID:', id);
+          myPeerIdRef.current = id;
           if (socket && socket.connected) {
             console.log('🔗 Socket ready, joining room...');
             socket.emit('join-room', { roomId, peerId: id, userName });
@@ -153,11 +162,16 @@ export const useWebRTC = (
           call.on('stream', (remoteStream) => {
             console.log('🔊 Received remote stream from:', call.peer);
 
+            // Try to find name in our participants map
+            const storedName = participantsRef.current.get(call.peer);
+            console.log(`👤 Resolved name for ${call.peer}: ${storedName || 'Usuario'}`);
+
             const peerConnection: PeerConnection = {
               peerId: call.peer,
-              userName: 'Usuario',
+              userName: storedName || 'Usuario',
               call,
               stream: remoteStream,
+              isVideoEnabled: true // Default assumption
             };
 
             peersRef.current.set(call.peer, peerConnection);
@@ -182,6 +196,7 @@ export const useWebRTC = (
       } catch (err) {
         console.error('❌ Failed to initialize WebRTC:', err);
         setError('No se pudo acceder al micrófono o cámara. Por favor, permite el acceso.');
+        setPermissionState('denied');
       }
     };
 
@@ -205,13 +220,19 @@ export const useWebRTC = (
   }, [socket, roomId, userName]);
 
   /**
-   * Listen for get-users event to update peer names
+   * Listen for socket events
    */
   useEffect(() => {
     if (!socket) return;
 
+    // Handle initial user list
     const handleGetUsers = ({ participants }: { roomId: string; participants: Record<string, { peerId: string; userName: string }> }) => {
       console.log('👥 Received participants list:', participants);
+
+      // Store names in our ref map first
+      Object.values(participants).forEach(({ peerId, userName }) => {
+        participantsRef.current.set(peerId, userName);
+      });
 
       // Update existing peers with correct userNames
       Object.values(participants).forEach(({ peerId, userName }) => {
@@ -225,10 +246,23 @@ export const useWebRTC = (
       setPeers(new Map(peersRef.current));
     };
 
+    // Handle toggle video event from other peers
+    const handleUserToggledVideo = ({ peerId, isVideoOff }: { peerId: string; isVideoOff: boolean }) => {
+      console.log(`🎥 Peer ${peerId} toggled video. Off: ${isVideoOff}`);
+      const peer = peersRef.current.get(peerId);
+      if (peer) {
+        peer.isVideoEnabled = !isVideoOff;
+        peersRef.current.set(peerId, peer);
+        setPeers(new Map(peersRef.current));
+      }
+    };
+
     socket.on('get-users', handleGetUsers);
+    socket.on('user-toggled-video', handleUserToggledVideo);
 
     return () => {
       socket.off('get-users', handleGetUsers);
+      socket.off('user-toggled-video', handleUserToggledVideo);
     };
   }, [socket]);
 
@@ -255,6 +289,9 @@ export const useWebRTC = (
     const handleUserJoined = ({ peerId, userName }: { peerId: string; userName: string }) => {
       console.log('👋 New user joined, calling:', peerId, userName);
 
+      // Store in participants map
+      participantsRef.current.set(peerId, userName);
+
       // Call the new user
       const call = peerInstance.current!.call(peerId, localStream);
 
@@ -263,6 +300,7 @@ export const useWebRTC = (
         userName,
         call,
         stream: null,
+        isVideoEnabled: true // Default assumption
       };
 
       // Receive remote stream
@@ -351,9 +389,18 @@ export const useWebRTC = (
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
         setIsVideoOff(!videoTrack.enabled);
+
+        // Notify signal server about video state change
+        if (socket && myPeerIdRef.current) {
+          socket.emit('toggle-video', {
+            roomId,
+            peerId: myPeerIdRef.current,
+            isVideoOff: !videoTrack.enabled
+          });
+        }
       }
     }
-  }, [localStream]);
+  }, [localStream, socket, roomId]);
 
   return {
     isMuted,
@@ -363,6 +410,7 @@ export const useWebRTC = (
     isInitialized,
     error,
     localStream,
-    peers
+    peers,
+    permissionState
   };
 };

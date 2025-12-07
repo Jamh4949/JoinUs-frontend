@@ -461,7 +461,7 @@ const Conference: FC = () => {
           {Array.from(webrtcPeers.entries()).slice(0, 9).map(([peerId, peer]) => (
             <div key={peerId} className="conference__participant">
               <div className="conference__participant-video">
-                {peer.stream ? (
+                {peer.stream && peer.isVideoEnabled ? (
                   <video
                     ref={(el) => {
                       if (el) {
