@@ -144,7 +144,12 @@ export const useWebRTC = (
           myPeerIdRef.current = id;
           if (socket && socket.connected) {
             console.log('🔗 Socket ready, joining room...');
-            socket.emit('join-room', { roomId, peerId: id, userName });
+            socket.emit('join-room', {
+              roomId,
+              peerId: id,
+              userName,
+              isVideoEnabled: !stream.getVideoTracks()[0].enabled ? false : true // Only false if disabled, default true
+            });
             setIsInitialized(true);
           } else {
             console.log('⏳ Peer ready but socket not connected yet...');
@@ -226,19 +231,20 @@ export const useWebRTC = (
     if (!socket) return;
 
     // Handle initial user list
-    const handleGetUsers = ({ participants }: { roomId: string; participants: Record<string, { peerId: string; userName: string }> }) => {
+    const handleGetUsers = ({ participants }: { roomId: string; participants: Record<string, { peerId: string; userName: string; isVideoEnabled: boolean }> }) => {
       console.log('👥 Received participants list:', participants);
 
       // Store names in our ref map first
-      Object.values(participants).forEach(({ peerId, userName }) => {
+      Object.values(participants).forEach(({ peerId, userName, isVideoEnabled }) => {
         participantsRef.current.set(peerId, userName);
       });
 
-      // Update existing peers with correct userNames
-      Object.values(participants).forEach(({ peerId, userName }) => {
+      // Update existing peers with correct userNames and video state
+      Object.values(participants).forEach(({ peerId, userName, isVideoEnabled }) => {
         const existingPeer = peersRef.current.get(peerId);
-        if (existingPeer && existingPeer.userName === 'Usuario') {
+        if (existingPeer) {
           existingPeer.userName = userName;
+          existingPeer.isVideoEnabled = isVideoEnabled ?? true; // Use server state or default true
           peersRef.current.set(peerId, existingPeer);
         }
       });
@@ -286,7 +292,7 @@ export const useWebRTC = (
   useEffect(() => {
     if (!socket || !localStream || !peerInstance.current) return;
 
-    const handleUserJoined = ({ peerId, userName }: { peerId: string; userName: string }) => {
+    const handleUserJoined = ({ peerId, userName, isVideoEnabled }: { peerId: string; userName: string; isVideoEnabled: boolean }) => {
       console.log('👋 New user joined, calling:', peerId, userName);
 
       // Store in participants map
@@ -300,7 +306,7 @@ export const useWebRTC = (
         userName,
         call,
         stream: null,
-        isVideoEnabled: true // Default assumption
+        isVideoEnabled: isVideoEnabled ?? true // Use incoming state
       };
 
       // Receive remote stream
