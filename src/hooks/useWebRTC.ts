@@ -125,14 +125,20 @@ export const useWebRTC = (
         setPermissionState('granted');
 
         // Create peer instance
-        const PEER_SERVER_URL = import.meta.env.VITE_PEER_SERVER_URL || 'localhost';
-        const PEER_SERVER_PORT = import.meta.env.VITE_PEER_SERVER_PORT ? parseInt(import.meta.env.VITE_PEER_SERVER_PORT) : 3000;
-        const PEER_SERVER_PATH = import.meta.env.VITE_PEER_SERVER_PATH || '/peerjs';
-
         // Determine if connection should be secure
         const isSecure = import.meta.env.VITE_PEER_SECURE
           ? import.meta.env.VITE_PEER_SECURE === 'true'
           : window.location.protocol === 'https:';
+
+        const PEER_SERVER_URL = import.meta.env.VITE_PEER_SERVER_URL || 'localhost';
+        // Critical Fix: If on HTTPS/Secure, default to 443 if no specific port is set, or if set to dev port 3000
+        const defaultPort = isSecure ? 443 : 3000;
+        const envPort = import.meta.env.VITE_PEER_SERVER_PORT ? parseInt(import.meta.env.VITE_PEER_SERVER_PORT) : null;
+        const PEER_SERVER_PORT = (isSecure && envPort === 3000) ? 443 : (envPort || defaultPort);
+
+        const PEER_SERVER_PATH = import.meta.env.VITE_PEER_SERVER_PATH || '/peerjs';
+
+        console.log(`🔌 Initializing PeerJS at ${isSecure ? 'wss' : 'ws'}://${PEER_SERVER_URL}:${PEER_SERVER_PORT}${PEER_SERVER_PATH}`);
 
         const peer = new Peer({
           host: PEER_SERVER_URL,
@@ -365,7 +371,7 @@ export const useWebRTC = (
 
             // Play audio -> Now handled by UI
             // playAudioStream(remoteStream, peerId);
-            
+
             // Log ICE state changes
             call.peerConnection.oniceconnectionstatechange = () => {
               console.log(`❄️ ICE State (${peerId}):`, call.peerConnection.iceConnectionState);
