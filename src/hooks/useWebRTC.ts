@@ -154,27 +154,26 @@ export const useWebRTC = (
               { urls: 'stun:stun3.l.google.com:19302' },
               { urls: 'stun:stun4.l.google.com:19302' },
               
-              // Metered TURN servers (Free with good limits)
+              // Metered TURN servers (More reliable free TURN)
               {
-                urls: [
-                  'stun:global.stun.twilio.com:3478',
-                  'turn:global.turn.twilio.com:3478?transport=udp',
-                  'turn:global.turn.twilio.com:3478?transport=tcp',
-                  'turn:global.turn.twilio.com:443?transport=tcp'
-                ],
-                username: 'f4b4035eaa76f4a55de5f4351567653ee4ff6fa97b50b6b334fcc1be9c27212d',
-                credential: '2Z+R5qZT7tzZvhQjW1YuTWJKhLcGu0D1b5qQkCM8U1k=',
+                urls: 'turn:a.relay.metered.ca:80',
+                username: 'e244500c84728df47c9e0c72',
+                credential: 'C+6Mw+z6mOEU1ZBJ',
               },
-              
-              // OpenRelay (Backup)
               {
-                urls: [
-                  'stun:openrelay.metered.ca:80',
-                  'turn:openrelay.metered.ca:80',
-                  'turn:openrelay.metered.ca:443?transport=tcp'
-                ],
-                username: 'openrelayproject',
-                credential: 'openrelayproject',
+                urls: 'turn:a.relay.metered.ca:80?transport=tcp',
+                username: 'e244500c84728df47c9e0c72',
+                credential: 'C+6Mw+z6mOEU1ZBJ',
+              },
+              {
+                urls: 'turn:a.relay.metered.ca:443',
+                username: 'e244500c84728df47c9e0c72',
+                credential: 'C+6Mw+z6mOEU1ZBJ',
+              },
+              {
+                urls: 'turns:a.relay.metered.ca:443?transport=tcp',
+                username: 'e244500c84728df47c9e0c72',
+                credential: 'C+6Mw+z6mOEU1ZBJ',
               },
             ],
             iceTransportPolicy: 'all', // Try all methods: direct, STUN, TURN
