@@ -93,6 +93,39 @@ export const useWebRTC = (
   const myPeerIdRef = useRef<string | null>(null);
 
   /**
+   * Helper function to play audio stream
+   * 
+   * @param stream - The MediaStream to play
+   * @param peerId - The peer ID for tracking
+   */
+  const playAudioStream = (stream: MediaStream, peerId: string) => {
+    // Remove old audio element if exists
+    const oldAudio = audioElementsRef.current.get(peerId);
+    if (oldAudio) {
+      oldAudio.srcObject = null;
+      oldAudio.remove();
+    }
+
+    // Create new audio element
+    const audio = new Audio();
+    audio.srcObject = stream;
+    audio.autoplay = true;
+    audio.setAttribute('data-peer-id', peerId);
+
+    const playPromise = audio.play();
+
+    if (playPromise !== undefined) {
+      playPromise
+        .catch(err => {
+          console.warn('⚠️ Audio play failed (likely autoplay policy):', err);
+        });
+    }
+
+    // Store reference
+    audioElementsRef.current.set(peerId, audio);
+  };
+
+  /**
    * Initialize WebRTC: get audio stream and create peer instance
    */
   useEffect(() => {
@@ -123,7 +156,6 @@ export const useWebRTC = (
         const PEER_SERVER_PATH = import.meta.env.VITE_PEER_SERVER_PATH || '/peerjs';
 
         // Determine if connection should be secure
-        // Priority: 1. Env var, 2. Current protocol
         const isSecure = import.meta.env.VITE_PEER_SECURE
           ? import.meta.env.VITE_PEER_SECURE === 'true'
           : window.location.protocol === 'https:';
@@ -141,7 +173,7 @@ export const useWebRTC = (
               { urls: 'stun:stun3.l.google.com:19302' },
               { urls: 'stun:stun4.l.google.com:19302' },
               { urls: 'stun:stun.voiparound.com' },
-              { urls: 'stun:stun.services.mozilla.com' } // Reliable fallback
+              { urls: 'stun:stun.services.mozilla.com' }
             ],
           },
         });
@@ -158,7 +190,7 @@ export const useWebRTC = (
               roomId,
               peerId: id,
               userName,
-              isVideoEnabled: !stream.getVideoTracks()[0].enabled ? false : true // Only false if disabled, default true
+              isVideoEnabled: !stream.getVideoTracks()[0].enabled ? false : true
             });
             setIsInitialized(true);
           } else {
@@ -200,6 +232,13 @@ export const useWebRTC = (
             console.log('📴 Call closed with:', call.peer);
             peersRef.current.delete(call.peer);
             setPeers(new Map(peersRef.current));
+
+            // Clean up audio element
+            const audio = audioElementsRef.current.get(call.peer);
+            if (audio) {
+              audio.remove();
+              audioElementsRef.current.delete(call.peer);
+            }
           });
         });
 
@@ -235,7 +274,7 @@ export const useWebRTC = (
   }, [socket, roomId, userName]);
 
   /**
-   * Listen for socket events
+   * Listen for socket events (Get Users & Toggle Video)
    */
   useEffect(() => {
     if (!socket) return;
@@ -254,7 +293,7 @@ export const useWebRTC = (
         const existingPeer = peersRef.current.get(peerId);
         if (existingPeer) {
           existingPeer.userName = userName;
-          existingPeer.isVideoEnabled = isVideoEnabled ?? true; // Use server state or default true
+          existingPeer.isVideoEnabled = isVideoEnabled ?? true;
           peersRef.current.set(peerId, existingPeer);
         }
       });
@@ -297,7 +336,7 @@ export const useWebRTC = (
   }, [socket, socket?.connected, roomId, userName, isInitialized]);
 
   /**
-   * Handle new user joining the room
+   * Handle new user joining the room (Cleaned & Debounced)
    */
   useEffect(() => {
     if (!socket || !localStream || !peerInstance.current) return;
@@ -308,36 +347,68 @@ export const useWebRTC = (
       // Store in participants map
       participantsRef.current.set(peerId, userName);
 
-      // Call the new user
-      const call = peerInstance.current!.call(peerId, localStream);
+      // Prevent duplicate calls if we are already seeing this peer
+      if (peersRef.current.has(peerId)) {
+        console.log('⚠️ Already connected to peer:', peerId);
+        return;
+      }
 
-      const peerConnection: PeerConnection = {
-        peerId,
-        userName,
-        call,
-        stream: null,
-        isVideoEnabled: isVideoEnabled ?? true // Use incoming state
-      };
+      // Add a small delay to ensure the other peer is fully ready to answer
+      setTimeout(() => {
+        const call = peerInstance.current!.call(peerId, localStream);
 
-      // Receive remote stream
-      call.on('stream', (remoteStream) => {
-        console.log('🔊 Received stream from:', peerId);
-        peerConnection.stream = remoteStream;
+        if (!call) {
+          console.error('❌ Failed to call peer:', peerId);
+          return;
+        }
+
+        const peerConnection: PeerConnection = {
+          peerId,
+          userName,
+          call,
+          stream: null, // Stream comes later
+          isVideoEnabled: isVideoEnabled ?? true
+        };
+
+        // Cache connection immediately to prevent duplicates
         peersRef.current.set(peerId, peerConnection);
         setPeers(new Map(peersRef.current));
 
-        // Play audio
-        playAudioStream(remoteStream, peerId);
-      });
+        // Event: Receive remote stream
+        call.on('stream', (remoteStream) => {
+          console.log('🔊 Received stream from (outgoing):', peerId);
 
-      call.on('close', () => {
-        console.log('📴 Call closed with:', peerId);
-        peersRef.current.delete(peerId);
-        setPeers(new Map(peersRef.current));
-      });
+          // Update the existing connection with the stream
+          const currentPeer = peersRef.current.get(peerId);
+          if (currentPeer) {
+            currentPeer.stream = remoteStream;
+            peersRef.current.set(peerId, currentPeer);
+            setPeers(new Map(peersRef.current));
 
-      peersRef.current.set(peerId, peerConnection);
-      setPeers(new Map(peersRef.current));
+            // Play audio
+            playAudioStream(remoteStream, peerId);
+          }
+        });
+
+        call.on('error', (err) => {
+          console.error('❌ Call error with:', peerId, err);
+          peersRef.current.delete(peerId);
+          setPeers(new Map(peersRef.current));
+        });
+
+        call.on('close', () => {
+          console.log('📴 Call closed with:', peerId);
+          peersRef.current.delete(peerId);
+          setPeers(new Map(peersRef.current));
+
+          // Clean up audio element
+          const audio = audioElementsRef.current.get(peerId);
+          if (audio) {
+            audio.remove();
+            audioElementsRef.current.delete(peerId);
+          }
+        });
+      }, 1000); // 1s delay
     };
 
     const handleUserDisconnected = (peerId: string) => {
@@ -348,6 +419,12 @@ export const useWebRTC = (
       }
       peersRef.current.delete(peerId);
       setPeers(new Map(peersRef.current));
+
+      const audio = audioElementsRef.current.get(peerId);
+      if (audio) {
+        audio.remove();
+        audioElementsRef.current.delete(peerId);
+      }
     };
 
     socket.on('user-joined', handleUserJoined);
@@ -359,29 +436,6 @@ export const useWebRTC = (
     };
   }, [socket, localStream]);
 
-  /**
-   * Helper function to play audio stream
-   * 
-   * @param stream - The MediaStream to play
-   * @param peerId - The peer ID for tracking
-   */
-  const playAudioStream = (stream: MediaStream, peerId: string) => {
-    // Remove old audio element if exists
-    const oldAudio = audioElementsRef.current.get(peerId);
-    if (oldAudio) {
-      oldAudio.srcObject = null;
-      oldAudio.remove();
-    }
-
-    // Create new audio element
-    const audio = new Audio();
-    audio.srcObject = stream;
-    audio.autoplay = true;
-    audio.play().catch(err => console.error('Error playing audio:', err));
-
-    // Store reference
-    audioElementsRef.current.set(peerId, audio);
-  };
 
   /**
    * Toggle mute state of local audio track

@@ -397,9 +397,8 @@ const Conference: FC = () => {
         {/* Meeting info header */}
         <div className="conference__header">
           <div className="conference__meeting-info">
-            <span className="conference__meeting-id">ID: {meetingId}</span>
             <span className="conference__participant-count">
-              👥 {participantCount} {participantCount === 1 ? 'participante' : 'participantes'}
+              👥 {Math.max(participantCount, webrtcPeers.size + 1)} {Math.max(participantCount, webrtcPeers.size + 1) === 1 ? 'participante' : 'participantes'}
             </span>
           </div>
           <div className="conference__connection-status">
