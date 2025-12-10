@@ -147,20 +147,37 @@ export const useWebRTC = (
           secure: isSecure,
           config: {
             iceServers: [
-              // OpenRelay (Free TURN) - Critical for cross-network (Symmetric NAT)
-              {
-                urls: [
-                  "stun:openrelay.metered.ca:80",
-                  "turn:openrelay.metered.ca:80",
-                  "turn:openrelay.metered.ca:443?transport=tcp"
-                ],
-                username: "openrelayproject",
-                credential: "openrelayproject",
-              },
-              // Google STUN (Backup)
+              // Google STUN servers (Primary - Most reliable)
               { urls: 'stun:stun.l.google.com:19302' },
               { urls: 'stun:stun1.l.google.com:19302' },
+              { urls: 'stun:stun2.l.google.com:19302' },
+              { urls: 'stun:stun3.l.google.com:19302' },
+              { urls: 'stun:stun4.l.google.com:19302' },
+              
+              // Metered TURN servers (Free with good limits)
+              {
+                urls: [
+                  'stun:global.stun.twilio.com:3478',
+                  'turn:global.turn.twilio.com:3478?transport=udp',
+                  'turn:global.turn.twilio.com:3478?transport=tcp',
+                  'turn:global.turn.twilio.com:443?transport=tcp'
+                ],
+                username: 'f4b4035eaa76f4a55de5f4351567653ee4ff6fa97b50b6b334fcc1be9c27212d',
+                credential: '2Z+R5qZT7tzZvhQjW1YuTWJKhLcGu0D1b5qQkCM8U1k=',
+              },
+              
+              // OpenRelay (Backup)
+              {
+                urls: [
+                  'stun:openrelay.metered.ca:80',
+                  'turn:openrelay.metered.ca:80',
+                  'turn:openrelay.metered.ca:443?transport=tcp'
+                ],
+                username: 'openrelayproject',
+                credential: 'openrelayproject',
+              },
             ],
+            iceTransportPolicy: 'all', // Try all methods: direct, STUN, TURN
           },
         });
 
@@ -213,9 +230,27 @@ export const useWebRTC = (
             // Play audio -> Now handled by UI
             // playAudioStream(remoteStream, call.peer);
 
-            // Log ICE state changes
+            // Enhanced ICE state logging and handling
             call.peerConnection.oniceconnectionstatechange = () => {
-              console.log(`❄️ ICE State (${call.peer}):`, call.peerConnection.iceConnectionState);
+              const state = call.peerConnection.iceConnectionState;
+              console.log(`❄️ ICE State (incoming from ${call.peer}):`, state);
+              
+              if (state === 'failed') {
+                console.error(`❌ ICE connection failed with ${call.peer}. Retrying...`);
+                call.peerConnection.restartIce();
+              } else if (state === 'disconnected') {
+                console.warn(`⚠️ ICE disconnected with ${call.peer}. Waiting for reconnection...`);
+              } else if (state === 'connected' || state === 'completed') {
+                console.log(`✅ ICE connection established with ${call.peer}`);
+              }
+            };
+
+            call.peerConnection.onicegatheringstatechange = () => {
+              console.log(`🧊 ICE Gathering State (${call.peer}):`, call.peerConnection.iceGatheringState);
+            };
+
+            call.peerConnection.onsignalingstatechange = () => {
+              console.log(`📡 Signaling State (${call.peer}):`, call.peerConnection.signalingState);
             };
           });
 
@@ -372,9 +407,30 @@ export const useWebRTC = (
             // Play audio -> Now handled by UI
             // playAudioStream(remoteStream, peerId);
 
-            // Log ICE state changes
+            // Log ICE state changes for debugging
             call.peerConnection.oniceconnectionstatechange = () => {
-              console.log(`❄️ ICE State (${peerId}):`, call.peerConnection.iceConnectionState);
+              const state = call.peerConnection.iceConnectionState;
+              console.log(`❄️ ICE State (${peerId}):`, state);
+              
+              if (state === 'failed') {
+                console.error(`❌ ICE connection failed with ${peerId}. Retrying...`);
+                // Attempt ICE restart
+                call.peerConnection.restartIce();
+              } else if (state === 'disconnected') {
+                console.warn(`⚠️ ICE disconnected with ${peerId}. Waiting for reconnection...`);
+              } else if (state === 'connected' || state === 'completed') {
+                console.log(`✅ ICE connection established with ${peerId}`);
+              }
+            };
+
+            // Log ICE gathering state
+            call.peerConnection.onicegatheringstatechange = () => {
+              console.log(`🧊 ICE Gathering State (${peerId}):`, call.peerConnection.iceGatheringState);
+            };
+
+            // Log signaling state
+            call.peerConnection.onsignalingstatechange = () => {
+              console.log(`📡 Signaling State (${peerId}):`, call.peerConnection.signalingState);
             };
           }
         });
