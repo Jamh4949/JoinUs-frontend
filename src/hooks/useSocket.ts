@@ -37,7 +37,7 @@ export const useSocket = (serverUrl: string, autoConnect: boolean = false) => {
 
             // Create socket connection with robust options
             socketRef.current = io(serverUrl, {
-                transports: ['websocket', 'polling'], // Prefer WebSocket
+                transports: ['polling', 'websocket'], // Start with polling for maximum compatibility, then upgrade
                 reconnection: true,
                 reconnectionAttempts: 10,
                 reconnectionDelay: 1000,
