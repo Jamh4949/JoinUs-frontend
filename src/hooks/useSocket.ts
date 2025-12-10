@@ -31,13 +31,19 @@ export const useSocket = (serverUrl: string, autoConnect: boolean = false) => {
     const socketRef = useRef<Socket | null>(null);
 
     useEffect(() => {
+        // Only connect if autoConnect is true and we don't have a socket instance
         if (autoConnect && !socketRef.current) {
-            // Create socket connection
+            console.log('🔌 Initializing socket connection to:', serverUrl);
+
+            // Create socket connection with robust options
             socketRef.current = io(serverUrl, {
-                transports: ['polling', 'websocket'], // Try polling first for maximum reliability
+                transports: ['websocket', 'polling'], // Prefer WebSocket
                 reconnection: true,
-                reconnectionAttempts: 5,
+                reconnectionAttempts: 10,
                 reconnectionDelay: 1000,
+                reconnectionDelayMax: 5000,
+                timeout: 20000,
+                autoConnect: true
             });
 
             // Connection event handlers
@@ -46,20 +52,25 @@ export const useSocket = (serverUrl: string, autoConnect: boolean = false) => {
                 setIsConnected(true);
             });
 
-            socketRef.current.on('disconnect', () => {
-                console.log('❌ Socket disconnected');
+            socketRef.current.on('disconnect', (reason) => {
+                console.log('❌ Socket disconnected:', reason);
                 setIsConnected(false);
             });
 
             socketRef.current.on('connect_error', (error) => {
-                console.error('Socket connection error:', error);
+                console.error('⚠️ Socket connection error:', error.message);
                 setIsConnected(false);
             });
         }
 
-        // Cleanup on unmount
+        // Cleanup on unmount - ONLY if the component is truly unmounting
         return () => {
+            // We consciously decide NOT to disconnect on unmount for this debugging session 
+            // to see if it fixes the flickering. 
+            // In a real app, we should disconnect, but maybe use a provider instead.
+            // For now, let's keep the standard behavior but log it.
             if (socketRef.current) {
+                console.log('🧹 Socket cleanup for:', serverUrl);
                 socketRef.current.disconnect();
                 socketRef.current = null;
             }
