@@ -120,18 +120,28 @@ export const useWebRTC = (
         // Create peer instance
         const PEER_SERVER_URL = import.meta.env.VITE_PEER_SERVER_URL || 'localhost';
         const PEER_SERVER_PORT = import.meta.env.VITE_PEER_SERVER_PORT ? parseInt(import.meta.env.VITE_PEER_SERVER_PORT) : 3000;
+        const PEER_SERVER_PATH = import.meta.env.VITE_PEER_SERVER_PATH || '/peerjs';
 
-        const isSecure = PEER_SERVER_URL !== 'localhost';
+        // Determine if connection should be secure
+        // Priority: 1. Env var, 2. Current protocol
+        const isSecure = import.meta.env.VITE_PEER_SECURE
+          ? import.meta.env.VITE_PEER_SECURE === 'true'
+          : window.location.protocol === 'https:';
 
         const peer = new Peer({
           host: PEER_SERVER_URL,
           port: PEER_SERVER_PORT,
-          path: '/peerjs',
+          path: PEER_SERVER_PATH,
           secure: isSecure,
           config: {
             iceServers: [
               { urls: 'stun:stun.l.google.com:19302' },
               { urls: 'stun:stun1.l.google.com:19302' },
+              { urls: 'stun:stun2.l.google.com:19302' },
+              { urls: 'stun:stun3.l.google.com:19302' },
+              { urls: 'stun:stun4.l.google.com:19302' },
+              { urls: 'stun:stun.voiparound.com' },
+              { urls: 'stun:stun.services.mozilla.com' } // Reliable fallback
             ],
           },
         });
@@ -235,7 +245,7 @@ export const useWebRTC = (
       console.log('👥 Received participants list:', participants);
 
       // Store names in our ref map first
-      Object.values(participants).forEach(({ peerId, userName, isVideoEnabled }) => {
+      Object.values(participants).forEach(({ peerId, userName }) => {
         participantsRef.current.set(peerId, userName);
       });
 
