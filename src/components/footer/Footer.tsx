@@ -69,7 +69,12 @@ const Footer: FC = () => {
         {/* Documentation and help column */}
         <div className="footer__col">
           <h3>Guía:</h3>
-          <a href="#" aria-label="Manual de usuario de JoinUs">
+          <a 
+            href="/manual-usuario.pdf" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            aria-label="Manual de usuario de JoinUs"
+          >
             Manual de Usuario
           </a>
         </div>
