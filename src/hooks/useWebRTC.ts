@@ -89,7 +89,6 @@ export const useWebRTC = (
   const peerInstance = useRef<Peer | null>(null);
   const peersRef = useRef<Map<string, PeerConnection>>(new Map());
   const participantsRef = useRef<Map<string, string>>(new Map()); // Map<peerId, userName>
-  const audioElementsRef = useRef<Map<string, HTMLAudioElement>>(new Map());
   const myPeerIdRef = useRef<string | null>(null);
 
   /**
@@ -98,32 +97,7 @@ export const useWebRTC = (
    * @param stream - The MediaStream to play
    * @param peerId - The peer ID for tracking
    */
-  const playAudioStream = (stream: MediaStream, peerId: string) => {
-    // Remove old audio element if exists
-    const oldAudio = audioElementsRef.current.get(peerId);
-    if (oldAudio) {
-      oldAudio.srcObject = null;
-      oldAudio.remove();
-    }
 
-    // Create new audio element
-    const audio = new Audio();
-    audio.srcObject = stream;
-    audio.autoplay = true;
-    audio.setAttribute('data-peer-id', peerId);
-
-    const playPromise = audio.play();
-
-    if (playPromise !== undefined) {
-      playPromise
-        .catch(err => {
-          console.warn('⚠️ Audio play failed (likely autoplay policy):', err);
-        });
-    }
-
-    // Store reference
-    audioElementsRef.current.set(peerId, audio);
-  };
 
   /**
    * Initialize WebRTC: get audio stream and create peer instance
@@ -230,21 +204,14 @@ export const useWebRTC = (
             peersRef.current.set(call.peer, peerConnection);
             setPeers(new Map(peersRef.current));
 
-            // Play audio
-            playAudioStream(remoteStream, call.peer);
+            // Play audio -> Now handled by UI
+            // playAudioStream(remoteStream, call.peer);
           });
 
           call.on('close', () => {
             console.log('📴 Call closed with:', call.peer);
             peersRef.current.delete(call.peer);
             setPeers(new Map(peersRef.current));
-
-            // Clean up audio element
-            const audio = audioElementsRef.current.get(call.peer);
-            if (audio) {
-              audio.remove();
-              audioElementsRef.current.delete(call.peer);
-            }
           });
         });
 
@@ -391,8 +358,8 @@ export const useWebRTC = (
             peersRef.current.set(peerId, currentPeer);
             setPeers(new Map(peersRef.current));
 
-            // Play audio
-            playAudioStream(remoteStream, peerId);
+            // Play audio -> Now handled by UI
+            // playAudioStream(remoteStream, peerId);
           }
         });
 
@@ -406,13 +373,6 @@ export const useWebRTC = (
           console.log('📴 Call closed with:', peerId);
           peersRef.current.delete(peerId);
           setPeers(new Map(peersRef.current));
-
-          // Clean up audio element
-          const audio = audioElementsRef.current.get(peerId);
-          if (audio) {
-            audio.remove();
-            audioElementsRef.current.delete(peerId);
-          }
         });
       }, 1000); // 1s delay
     };
@@ -425,12 +385,6 @@ export const useWebRTC = (
       }
       peersRef.current.delete(peerId);
       setPeers(new Map(peersRef.current));
-
-      const audio = audioElementsRef.current.get(peerId);
-      if (audio) {
-        audio.remove();
-        audioElementsRef.current.delete(peerId);
-      }
     };
 
     socket.on('user-joined', handleUserJoined);

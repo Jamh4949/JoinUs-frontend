@@ -438,15 +438,17 @@ const Conference: FC = () => {
           {/* Local user video */}
           <div className="conference__participant conference__participant--local">
             <div className="conference__participant-video">
-              {!isVideoOff && localStream ? (
+              {localStream && (
                 <video
                   ref={localVideoRef}
                   autoPlay
                   muted
                   playsInline
                   className="conference__video-element"
+                  style={{ display: !isVideoOff ? 'block' : 'none' }}
                 />
-              ) : (
+              )}
+              {(!localStream || isVideoOff) && (
                 <div className="conference__participant-avatar">
                   {getInitials(user?.firstName || user?.name || 'Usuario')}
                 </div>
@@ -461,7 +463,7 @@ const Conference: FC = () => {
           {Array.from(webrtcPeers.entries()).slice(0, 9).map(([peerId, peer]) => (
             <div key={peerId} className="conference__participant">
               <div className="conference__participant-video">
-                {peer.stream && peer.isVideoEnabled ? (
+                {peer.stream && (
                   <video
                     ref={(el) => {
                       if (el) {
@@ -471,8 +473,10 @@ const Conference: FC = () => {
                     autoPlay
                     playsInline
                     className="conference__video-element"
+                    style={{ display: peer.isVideoEnabled ? 'block' : 'none' }}
                   />
-                ) : (
+                )}
+                {(!peer.stream || !peer.isVideoEnabled) && (
                   <div className="conference__participant-avatar">
                     {getInitials(peer.userName || 'Usuario')}
                   </div>
