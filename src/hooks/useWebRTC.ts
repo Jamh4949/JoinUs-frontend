@@ -167,13 +167,19 @@ export const useWebRTC = (
           secure: isSecure,
           config: {
             iceServers: [
+              // OpenRelay (Free TURN) - Critical for cross-network (Symmetric NAT)
+              {
+                urls: [
+                  "stun:openrelay.metered.ca:80",
+                  "turn:openrelay.metered.ca:80",
+                  "turn:openrelay.metered.ca:443?transport=tcp"
+                ],
+                username: "openrelayproject",
+                credential: "openrelayproject",
+              },
+              // Google STUN (Backup)
               { urls: 'stun:stun.l.google.com:19302' },
               { urls: 'stun:stun1.l.google.com:19302' },
-              { urls: 'stun:stun2.l.google.com:19302' },
-              { urls: 'stun:stun3.l.google.com:19302' },
-              { urls: 'stun:stun4.l.google.com:19302' },
-              { urls: 'stun:stun.voiparound.com' },
-              { urls: 'stun:stun.services.mozilla.com' }
             ],
           },
         });
