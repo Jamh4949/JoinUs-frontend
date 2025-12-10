@@ -468,6 +468,11 @@ const Conference: FC = () => {
                     ref={(el) => {
                       if (el) {
                         remoteVideoRefs.current.set(peerId, el);
+                        // Force update srcObject immediately when ref is attached
+                        if (el.srcObject !== peer.stream) {
+                          el.srcObject = peer.stream;
+                          el.play().catch(e => console.error('Error playing video:', e));
+                        }
                       }
                     }}
                     autoPlay

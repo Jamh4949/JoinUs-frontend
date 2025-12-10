@@ -206,6 +206,11 @@ export const useWebRTC = (
 
             // Play audio -> Now handled by UI
             // playAudioStream(remoteStream, call.peer);
+
+            // Log ICE state changes
+            call.peerConnection.oniceconnectionstatechange = () => {
+              console.log(`❄️ ICE State (${call.peer}):`, call.peerConnection.iceConnectionState);
+            };
           });
 
           call.on('close', () => {
@@ -360,6 +365,11 @@ export const useWebRTC = (
 
             // Play audio -> Now handled by UI
             // playAudioStream(remoteStream, peerId);
+            
+            // Log ICE state changes
+            call.peerConnection.oniceconnectionstatechange = () => {
+              console.log(`❄️ ICE State (${peerId}):`, call.peerConnection.iceConnectionState);
+            };
           }
         });
 
